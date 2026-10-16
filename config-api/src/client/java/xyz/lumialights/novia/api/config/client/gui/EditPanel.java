@@ -38,7 +38,6 @@ package xyz.lumialights.novia.api.config.client.gui;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import xyz.lumialights.novia.api.GuiApiLang;
 import xyz.lumialights.novia.api.config.PropertyId;
 import xyz.lumialights.novia.api.gui.canvas.Canvas;
@@ -69,7 +68,6 @@ public class EditPanel
     private final ConfigScreenLookAndFeel lookAndFeel;
     private final Deque<StackFrame>       contentStack = new LinkedList<>();
     
-    private Value      value      = new Value();
     private Content    content    = null;
     private PropertyId propertyId = null;
     
@@ -90,7 +88,7 @@ public class EditPanel
     }
     
     //==================================================================================================================
-    @Override public @NotNull Value getValue() { return this.value; }
+    @Override public @NotNull Value getValue() { return this.content.content().getValue(); }
     
     //==================================================================================================================
     @Override
@@ -101,13 +99,15 @@ public class EditPanel
             throw new IllegalArgumentException("Value is not a list or a Map");
         }
         
-        this.value = value;
+        this.content.content.setValue(value);
     }
     
-    public void setProperty(final @NotNull PropertyId propertyId, final @NotNull Value value)
+    public void setProperty(final @NotNull PropertyId propertyId, final @NotNull Text title,
+                            final @NotNull IStatefulComponent content)
     {
         this.propertyId = propertyId;
-        this.value      = value;
+        this.pushFrame(title, content);
+        this.setVisible(true);
     }
     
     //------------------------------------------------------------------------------------------------------------------
@@ -121,7 +121,7 @@ public class EditPanel
     {
         if (this.contentStack.size() < 2)
         {
-            this.hideScreen();
+            this.setVisible(false);
             return;
         }
         
@@ -150,12 +150,11 @@ public class EditPanel
     //==================================================================================================================
     private void updateContent(final @NotNull Text title, final @NotNull IStatefulComponent content)
     {
+        this.removeChild((GuiComponent) this.content.content);
+        
         this.content = new Content(content);
         this.titleLabel.setMessage(title);
         
-        this.removeAllChildren();
-        this.addChild(this.titleLabel);
-        this.addChild(this.backButton);
         this.addChild((GuiComponent) this.content.content);
         this.resized();
     }

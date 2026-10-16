@@ -47,8 +47,6 @@ import xyz.lumialights.novia.api.config.PropertyId;
 import xyz.lumialights.novia.api.config.client.document.ComponentStyle;
 import xyz.lumialights.novia.api.config.client.gui.schema.IComponentFactory;
 import xyz.lumialights.novia.api.config.client.gui.schema.ISchemaFactory;
-import xyz.lumialights.novia.api.config.client.gui.schema.component.*;
-import xyz.lumialights.novia.api.config.schema.builtin.atomic.*;
 import xyz.lumialights.novia.api.core.serialisation.Value;
 import xyz.lumialights.novia.api.core.util.NormalisedRange;
 import xyz.lumialights.novia.api.core.util.Pair;
@@ -137,6 +135,8 @@ public abstract class AtomicSchemaMixin
             case VOID    -> (screen -> new SchemaLabel(Text
                 .literal("null")
                 .setStyle(Style.EMPTY.withUnderline(true))));
+            
+            case LIST -> (screen -> new SchemaEditButton(id, new SchemaList(screen, id.providerId(), )))
             
             case MAP, LIST -> null;
         };

@@ -12,7 +12,8 @@
         "schema.TupleSchemaMixin",
         "schema.VariantSchemaMixin",
         "schema.ConstantSchemaMixin",
-        "RegistryBootstrapMixin"
+        "RegistryBootstrapMixin",
+        "ProviderMixin", "ProviderMixin$StandaloneMixin", "ProviderMixin$NetworkMixin"
     ],
     "injectors": {
         "defaultRequire": 1

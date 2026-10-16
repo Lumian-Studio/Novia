@@ -37,8 +37,6 @@ package xyz.lumialights.novia.api.config.schema;
 
 import com.google.gson.JsonElement;
 import com.mojang.serialization.*;
-import xyz.lumialights.novia.api.config.schema.builtin.*;
-import xyz.lumialights.novia.api.config.schema.builtin.atomic.*;
 import xyz.lumialights.novia.api.core.serialisation.Value;
 
 import java.util.*;

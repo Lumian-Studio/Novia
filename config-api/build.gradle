@@ -16,5 +16,5 @@ repositories {
 
 dependencies {
     implementation "org.snakeyaml:snakeyaml-engine:2.9"
-    modCompileOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
+    compileOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
 }

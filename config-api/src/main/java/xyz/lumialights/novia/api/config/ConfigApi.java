@@ -63,9 +63,5 @@ public class ConfigApi
     }
     
     //******************************************************************************************************************
-    @Override
-    public void onInitialize()
-    {
-        ConfigApiPayloads.initialise();
-    }
+    @Override public void onInitialize() { ConfigApiPayloads.initialise(); }
 }

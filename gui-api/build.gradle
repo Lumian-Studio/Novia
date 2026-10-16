@@ -1,11 +1,4 @@
-fabricApi {
-    configureDataGeneration() {
-        client = true
-        modId  = project.mod_id
-    }
-}
-
-addSubmodules(project, ['core-api'])
+addFeature(project, features.core)
 
 loom {
     accessWidenerPath = file("src/client/resources/novia-gui-api.accesswidener")

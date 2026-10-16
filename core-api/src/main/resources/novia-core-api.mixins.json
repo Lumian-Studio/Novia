@@ -1,10 +1,10 @@
 {
     "required": true,
     "minVersion": "0.8",
-    "package": "xyz.lumialights.novia.api.core.mixin",
+    "package": "xyz.lumian.novia.api.core.mixin",
     "compatibilityLevel": "JAVA_21",
     "mixins": [
-        "StatHandlerMixin"
+        "StatsCounterMixin"
     ],
     "injectors": {
         "defaultRequire": 1

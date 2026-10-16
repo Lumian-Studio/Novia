@@ -42,7 +42,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.lumialights.novia.api.config.ConfigManager;
 import xyz.lumialights.novia.api.config.PropertyId;
-import xyz.lumialights.novia.api.config.client.document.*;
 import xyz.lumialights.novia.api.config.client.gui.schema.ISchemaFactory;
 import xyz.lumialights.novia.api.config.client.gui.schema.IComponentFactory;
 import xyz.lumialights.novia.api.config.client.gui.schema.component.NonSupportedSchemaButton;
@@ -89,7 +88,6 @@ public class TabManager
                 property.style().orElse(ComponentStyle.EMPTY));
         }
         
-        //--------------------------------------------------------------------------------------------------------------
         public static <Container> @Nullable PropertyEntry<Container> createImpl(
             @NotNull  final IConfigProvider<Container> provider,
             @NotNull  final PropertyId                 id,

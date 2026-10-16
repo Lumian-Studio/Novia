@@ -1,0 +1,14 @@
+[versions]
+
+# Base Configuration
+fabric-loader = '0.19.5'
+fabric-api    = '0.145.1+26.1'
+devauth       = '1.2.2'
+
+
+
+[libraries]
+fabric-loader = { module = 'net.fabricmc:fabric-loader',          version.ref = 'fabric-loader' }
+fabric-api    = { module = 'net.fabricmc.fabric-api:fabric-api',  version.ref = 'fabric-api'    }
+fabric-junit  = { module = 'net.fabricmc:fabric-loader-junit',    version.ref = 'fabric-loader' }
+devauth       = { module = 'me.djtheredstoner:DevAuth-fabric',    version.ref = 'devauth'       }

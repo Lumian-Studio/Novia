@@ -1,14 +1,91 @@
+plugins {
+    id 'net.fabricmc.fabric-loom'
+}
 
-addSubmodules(project, [ 'core-api', 'gui-api', 'yaml-api', 'config-api' ])
+group   = "xyz.lumian.novia.api.testmod"
+version = '1.0.0'
 
 repositories {
     maven {
         name = "Terraformers"
         url = "https://maven.terraformersmc.com/"
     }
+
+    maven { url = "https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1" }
 }
 
 dependencies {
-    implementation "org.snakeyaml:snakeyaml-engine:2.9"
-    modImplementation "com.terraformersmc:modmenu:${project.mod_menu_version}"
+    minecraft libs.minecraft
+
+    if (project.devauth.toBoolean())
+    {
+        runtimeOnly platform.devauth
+    }
+
+    implementation platform.fabric.loader
+    implementation platform.fabric.api
 }
+
+tasks.withType(GenerateModuleMetadata).configureEach {
+    enabled = false
+}
+
+final def java_version = libs.versions.java.get().toInteger()
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = java_version
+}
+
+java {
+	withSourcesJar()
+
+    sourceCompatibility = java_version
+	targetCompatibility = java_version
+}
+
+loom.runs.configureEach {
+    vmArgs("-enableassertions", "-Dmixin.debug.verify=true", "-Dmixin.debug.countInjections=true")
+}
+
+loom.log4jConfigs.from "log4j-dev.xml"
+
+processResources {
+    def mc_version = libs.minecraft.get().version
+    def fl_version = ">=${platform.fabric.loader.get().version}"
+    inputs.property "version",               project.version
+    inputs.property "minecraft_version",     mc_version
+    inputs.property "java_version",          java_version
+    inputs.property "fabric_loader_version", fl_version
+
+    filesMatching("fabric.mod.json") {
+        expand "version":               project.version,
+               "minecraft_version":     mc_version,
+               "java_version":          java_version,
+               "fabric_loader_version": fl_version
+    }
+}
+
+jar {
+    inputs.property "archivesName", project.base.archivesName
+    from(rootProject.file("LICENSE.md"))
+}
+
+loom {
+    splitEnvironmentSourceSets()
+
+    mods {
+        "novia-test-mod" {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.client
+        }
+    }
+
+    runConfigs.configureEach {
+		ideConfigGenerated = true
+	}
+}
+
+addFeature(project, features.core)
+addFeature(project, features.gui)
+addFeature(project, features.yaml)
+//addFeature(project, features.config)

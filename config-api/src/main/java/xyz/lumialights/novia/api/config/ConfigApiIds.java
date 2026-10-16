@@ -59,6 +59,10 @@ public class ConfigApiIds
         //==============================================================================================================
         // Server-bound : Config
         public static final Identifier CONFIG_C2S_CONFIG_ACK = of("cc2s_config_ack");
+        
+        //==============================================================================================================
+        // Server-bound : Play
+        public static final Identifier CONFIG_C2S_SERIALISE = of("pc2s_serialise");
     }
     
     public static abstract class Config

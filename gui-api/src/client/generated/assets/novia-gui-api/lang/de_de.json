@@ -1,9 +1,0 @@
-{
-  "gui.boolean.value.false": "Falsch",
-  "gui.boolean.value.true": "Wahr",
-  "gui.button.go_back.title": "< Zurück",
-  "gui.component.slider.message": "Wert: %s",
-  "gui.dropdown.select.placeholder": "Auswählen...",
-  "gui.narration.component.inactive.title": "Inaktive GUI Komponente %s",
-  "gui.narration.component.title": "GUI Komponente %s"
-}

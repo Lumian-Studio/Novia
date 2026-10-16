@@ -75,7 +75,7 @@ public class ServerConfigManagerHandler
     //******************************************************************************************************************
     protected final SnapshotCache rollingCache = new SnapshotCache(new HashMap<>());
     
-    protected Map<Identifier, BaseNetworkProvider<?>> providers   = new HashMap<>();
+    protected Map<Identifier, BaseNetworkProvider<?>> providers   = new LinkedHashMap<>();
     protected SnapshotCache                           originCache = null;
 
     //******************************************************************************************************************
@@ -89,7 +89,7 @@ public class ServerConfigManagerHandler
                 ConfigC2SConfigAcknowledgePayload.ID,
                 ((ignored, ctx) -> ctx.networkHandler().completeTask(SynchroniseServerConfigurationsTask.KEY))));
     }
-
+    
     //==================================================================================================================
     @Override
     public void onRegistryFrozen(final @NotNull ConfigRegistry registry)
@@ -103,8 +103,8 @@ public class ServerConfigManagerHandler
         this.providers = registry
             .entries()
             .stream()
-            .filter(e -> e.second().isSynced())
-            .collect(ImmutableMap.toImmutableMap(Pair::first, (e -> (BaseNetworkProvider<?>) e.second())));
+            .filter(e -> e.getValue().isSynced())
+            .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, (e -> (BaseNetworkProvider<?>) e.getValue())));
             
         if (this.providers.isEmpty())
         {
@@ -112,10 +112,7 @@ public class ServerConfigManagerHandler
             return;
         }
         
-        //noinspection DataFlowIssue
-        this.originCache = SnapshotCache.from(this.providers.entrySet()
-            .stream()
-            .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue)));
+        this.originCache = SnapshotCache.from(this.providers);
     }
 
     @Override

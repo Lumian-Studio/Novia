@@ -43,10 +43,9 @@ import xyz.lumialights.novia.api.config.registry.ProviderOverride;
 import xyz.lumialights.novia.api.config.registry.ConfigRegistry;
 import xyz.lumialights.novia.api.core.Novia;
 import xyz.lumialights.novia.api.config.provider.IConfigProvider;
-import xyz.lumialights.novia.api.core.serialisation.dynops.*;
 import xyz.lumialights.novia.api.core.serialisation.dynops.DynamicOpsSerialisers;
 import xyz.lumialights.novia.api.core.serialisation.Value;
-import xyz.lumialights.novia.api.core.util.*;
+
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -84,11 +83,12 @@ public final class ConfigManager
     }
     
     //******************************************************************************************************************
-    private final Path           configDir;
-    private final IConfigHandler handler;
+    private final Path            configDir;
+    private final IConfigHandler  handler;
+    private final Set<Identifier> success = new HashSet<>();
     
     //******************************************************************************************************************
-    public ConfigManager(@NotNull final Path configDir, @NotNull final IConfigHandler handler)
+    public ConfigManager(final @NotNull Path configDir, final @NotNull IConfigHandler handler)
     {
         if (ConfigManager.INSTANCE != null)
         {
@@ -103,7 +103,11 @@ public final class ConfigManager
         ConfigManager.REGISTRY
             .freeze()
             .parallelStream()
-            .forEach(p -> initialiseProvider(p.first(), p.second()));
+            .forEach(p -> this.initialiseProvider(p.getKey(), p.getValue()));
+        
+        Novia.LOGGER.info("Successfully loaded {} configurations: {}", this.success.size(), this.success);
+        this.success.clear();
+        
         System.gc();
         
         this.handler.onRegistryFrozen(ConfigManager.REGISTRY);
@@ -121,7 +125,7 @@ public final class ConfigManager
      * @param id The ID of the configuration
      * @return The file path
      */
-    public @NotNull Path getFileForId(@NotNull final Identifier id)
+    public @NotNull Path getFileForId(final @NotNull Identifier id)
     {
         final IConfigProvider<?> provider = ConfigManager.REGISTRY.get(id);
         return this.getFileForId(id, provider);
@@ -133,12 +137,12 @@ public final class ConfigManager
     }
     
     //------------------------------------------------------------------------------------------------------------------
-    private @NotNull Path getFileForId(@NotNull final Identifier id, @Nullable final IConfigProvider<?> provider)
+    private @NotNull Path getFileForId(final @NotNull Identifier id, final @Nullable IConfigProvider<?> provider)
     {
         return this.configDir.resolve(id.getNamespace()).resolve(id.getPath() + '.' + this.getFileExtension(provider));
     }
     
-    private @NotNull String getFileExtension(@Nullable final IConfigProvider<?> provider)
+    private @NotNull String getFileExtension(final @Nullable IConfigProvider<?> provider)
     {
         String ext = "txt";
         
@@ -156,14 +160,14 @@ public final class ConfigManager
     }
     
     //==================================================================================================================
-    public @Nullable ProviderOverride getProviderOverride(@NotNull final Identifier providerId)
+    public @Nullable ProviderOverride getProviderOverride(final @NotNull Identifier providerId)
     {
         return this.handler.getRegistryOverride(providerId);
     }
     
     //==================================================================================================================
-    private <Container> void initialiseProvider(@NotNull final Identifier                 id,
-                                                @NotNull final IConfigProvider<Container> provider)
+    private <Container> void initialiseProvider(final @NotNull Identifier                 id,
+                                                final @NotNull IConfigProvider<Container> provider)
     {
         final Path file = this.getFileForId(id, provider);
         
@@ -184,7 +188,16 @@ public final class ConfigManager
                 if (template_url != null)
                 {
                     IOUtils.copy(template_url, file.toFile());
-                    provider.load();
+                    
+                    try
+                    {
+                        provider.getSpec().read(provider.getOps(), file, provider.getManagedContainer());
+                        this.success.add(id);
+                    }
+                    catch (final ConfigSerialisationException ex)
+                    {
+                        Novia.LOGGER.error("Error loading the saved template", ex);
+                    }
                     
                     return;
                 }
@@ -200,15 +213,31 @@ public final class ConfigManager
                     template, id, ex);
             }
             
-            provider.save();
+            try
+            {
+                provider.getSpec().write(provider.getOps(), file, provider.getManagedContainer());
+            }
+            catch (final ConfigSerialisationException ex)
+            {
+                Novia.LOGGER.error("Error saving default configuration '{}'", id, ex);
+            }
+            
             return;
         }
         
-        provider.load();
+        try
+        {
+            provider.getSpec().read(provider.getOps(), file, provider.getManagedContainer());
+            this.success.add(id);
+        }
+        catch (final ConfigSerialisationException ex)
+        {
+            Novia.LOGGER.error("Error loading configuration '{}' from configuration file '{}'", id, file, ex);
+        }
     }
     
     //==================================================================================================================
-    void sendUpdates(@NotNull final Identifier id, @NotNull final List<Pair<JsonPointer, Value>> updates)
+    void sendUpdates(final @NotNull Identifier id, final @NotNull List<Pair<JsonPointer, Value>> updates)
     {
         if (!Novia.getInstance().isServerThread())
         {

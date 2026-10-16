@@ -1,6 +1,8 @@
-accessWidener v2 named
-accessible class net/minecraft/client/gui/render/state/GuiRenderState$Layer
-accessible method net/minecraft/text/Style <init> (Lnet/minecraft/text/TextColor;Ljava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/Boolean;Lnet/minecraft/text/ClickEvent;Lnet/minecraft/text/HoverEvent;Ljava/lang/String;Lnet/minecraft/util/Identifier;)V
-accessible class net/minecraft/client/font/BitmapFont$BitmapFontGlyph
-accessible class net/minecraft/client/font/UnihexFont$UnicodeTextureGlyph
-accessible class net/minecraft/client/font/TrueTypeFont$TtfGlyph
+accessWidener v2 official
+accessible class net/minecraft/client/renderer/state/gui/GuiRenderState$Node
+extendable class net/minecraft/network/chat/Style
+accessible method net/minecraft/network/chat/Style <init> (Lnet/minecraft/network/chat/TextColor;Ljava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/Boolean;Lnet/minecraft/network/chat/ClickEvent;Lnet/minecraft/network/chat/HoverEvent;Ljava/lang/String;Lnet/minecraft/network/chat/FontDescription;)V
+accessible class net/minecraft/client/gui/font/providers/BitmapProvider$Glyph
+accessible class net/minecraft/client/gui/font/providers/UnihexProvider$Glyph
+accessible class com/mojang/blaze3d/font/TrueTypeGlyphProvider$Glyph
+accessible class net/minecraft/client/gui/font/FontManager$CachedFontProvider

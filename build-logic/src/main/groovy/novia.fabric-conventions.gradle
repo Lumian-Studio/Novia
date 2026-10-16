@@ -1,0 +1,152 @@
+plugins {
+    id 'net.fabricmc.fabric-loom'
+    id 'com.github.gmazzo.buildconfig'
+}
+
+group = project.mod_package
+
+def module_id   = project.mod_id
+def module_name = project.mod_name
+
+if (project.hasProperty('module_id'))
+{
+    if (!project.hasProperty('module_name'))
+    {
+        throw new InvalidUserCodeException("gradle name is not defined for project '${rootProject.name}'")
+    }
+
+    module_id   += "-${project.module_id}-api"
+    module_name += " ${project.module_name} API"
+
+    version = features[project.module_id].get().version
+}
+else
+{
+    version = features.versions.novia.get()
+}
+
+base { archivesName = "${module_id}" }
+
+repositories {
+    maven {
+        name = 'Fabric'
+        url = 'https://maven.fabricmc.net/'
+    }
+
+    maven { url = "https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1" }
+}
+
+dependencies {
+    minecraft libs.minecraft
+
+    if (project.devauth.toBoolean())
+    {
+        runtimeOnly platform.devauth
+    }
+
+    implementation platform.fabric.loader
+    implementation platform.fabric.api
+
+    testImplementation platform.fabric.junit
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.withType(GenerateModuleMetadata).configureEach {
+    enabled = false
+}
+
+final def java_version = libs.versions.java.get().toInteger()
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = java_version
+}
+
+java {
+	withSourcesJar()
+
+    sourceCompatibility = java_version
+	targetCompatibility = java_version
+}
+
+loom.runs.configureEach {
+    vmArgs("-enableassertions", "-Dmixin.debug.verify=true", "-Dmixin.debug.countInjections=true")
+}
+
+loom.log4jConfigs.from "log4j-dev.xml"
+
+processResources {
+    def mc_version = libs.minecraft.get().version
+    def fl_version = ">=${platform.fabric.loader.get().version}"
+
+    inputs.property "version",               project.version
+    inputs.property "id",                    module_id
+    inputs.property "name",                  module_name
+    inputs.property "minecraft_version",     mc_version
+    inputs.property "java_version",          java_version
+    inputs.property "fabric_loader_version", fl_version
+    inputs.property "fabric_api_version",    "*"
+
+    filesMatching("fabric.mod.json") {
+        expand "version":               project.version,
+               "id":                    module_id,
+               "name":                  module_name,
+               "minecraft_version":     mc_version,
+               "java_version":          java_version,
+               "fabric_loader_version": fl_version,
+               "fabric_api_version":    "*"
+    }
+}
+
+jar {
+    inputs.property "archivesName", project.base.archivesName
+    from(rootProject.file("LICENSE.md"))
+}
+
+if (!project.is_source.toBoolean())
+{
+    return
+}
+
+loom {
+    splitEnvironmentSourceSets()
+
+    mods {
+        "${module_id}" {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.client
+        }
+    }
+
+    runConfigs.configureEach {
+		ideConfigGenerated = true
+	}
+}
+
+if (project.build_define.toBoolean())
+{
+    buildConfig {
+        final def pkg = (project.group + '.api.' + project.module_id)
+
+        forClass(pkg, (project.module_id.capitalize() + 'Define')) {
+            buildConfigField String.class, 'ID',         module_id
+            buildConfigField String.class, 'NAME',       module_name
+            buildConfigField String.class, 'VERSION',    features.versions.novia.get()
+            buildConfigField String.class, 'MC_VERSION', libs.versions.minecraft.get()
+            buildConfigField String.class, 'PACKAGE',    pkg
+        }
+    }
+}
+
+if (project.do_datagen.toBoolean())
+{
+    fabricApi {
+        configureDataGeneration {
+            client          = true
+            createSourceSet = true
+            modId           = "${module_id}-data"
+        }
+    }
+}

@@ -4,7 +4,7 @@
     "package": "xyz.lumialights.novia.test.mod.mixin.client",
     "compatibilityLevel": "JAVA_21",
     "client": [
-        "MainMenuMixin"
+        "xyz.lumian.novia.test.mod.mixin.client.MainMenuMixin"
     ],
     "injectors": {
         "defaultRequire": 1

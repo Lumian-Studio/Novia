@@ -1,5 +1,4 @@
-
-addSubmodules(project, ['core-api'])
+addFeature(project, features.core)
 
 dependencies {
     include(implementation "org.snakeyaml:snakeyaml-engine:2.9")

@@ -2,7 +2,7 @@
     "schemaVersion": 1,
     "id": "novia-yaml-api",
     "version": "${version}",
-    "name": "${mod_name}",
+    "name": "${name}",
     "description": "A 3rd party library module that deals with the integration of YAML into Minecraft.",
     "authors": ["LumiaLights"],
     "contact": {
@@ -14,13 +14,15 @@
     "icon": "assets/novia-yaml-api/icon.png",
     "environment": "*",
     "entrypoints": {
-        "main": [ "xyz.lumialights.novia.api.yaml.YamlApi" ]
+        "main": [
+            "xyz.lumian.novia.api.yaml.YamlApi"
+        ]
     },
     "mixins": [],
     "depends": {
-        "fabricloader": ">=${loader_version}",
+        "fabricloader": "${fabric_loader_version}",
         "java": "${java_version}",
-        "minecraft": ">=${minecraft_version}",
+        "minecraft": "${minecraft_version}",
         "novia-core-api": "*"
     }
 }

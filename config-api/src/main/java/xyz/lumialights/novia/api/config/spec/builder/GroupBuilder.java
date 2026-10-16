@@ -41,7 +41,6 @@ import org.jetbrains.annotations.Nullable;
 import xyz.lumialights.novia.api.config.ConfigBuildException;
 import xyz.lumialights.novia.api.config.property.Property;
 import xyz.lumialights.novia.api.config.schema.document.SchemaDocument;
-import xyz.lumialights.novia.api.config.spec.*;
 import xyz.lumialights.novia.api.core.util.JsonPointer;
 
 import java.util.*;

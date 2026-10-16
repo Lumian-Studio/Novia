@@ -55,10 +55,8 @@ import xyz.lumialights.novia.api.config.spec.PropertySpec;
 import xyz.lumialights.novia.api.core.Novia;
 import xyz.lumialights.novia.api.core.serialisation.Value;
 import xyz.lumialights.novia.api.core.util.JsonPointer;
-import xyz.lumialights.novia.api.core.util.Pair;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 
@@ -278,36 +276,20 @@ public final class ConfigRegistry
     }
     
     //==================================================================================================================
-    public @NotNull Set<Identifier> identifiers()
-    {
-        return new HashSet<>(this.id2provider.keySet());
-    }
+    public @NotNull Set<Identifier> identifiers() { return new HashSet<>(this.id2provider.keySet()); }
     
     /**
      * Gets a map with every element being a list of providers that share the same namespace mapped to that namespace.
      * @return The namespaced map
      */
-    public @NotNull Map<String, List<IConfigProvider<?>>> namespaced()
-    {
-        return this.namespace2providers;
-    }
+    public @NotNull Map<String, List<IConfigProvider<?>>> namespaced() { return this.namespace2providers; }
     
-    public @NotNull Set<IConfigProvider<?>> providers()
-    {
-        return new HashSet<>(this.id2provider.values());
-    }
+    public @NotNull Set<IConfigProvider<?>> providers() { return new HashSet<>(this.id2provider.values()); }
     
-    public @NotNull Set<Pair<Identifier, IConfigProvider<?>>> entries()
-    {
-        return this.id2provider
-            .entrySet()
-            .stream()
-            .map(Pair::of)
-            .collect(Collectors.toSet());
-    }
+    public @NotNull Set<Map.Entry<Identifier, IConfigProvider<?>>> entries() { return this.id2provider.entrySet(); }
     
     //==================================================================================================================
-    public @NotNull Set<Pair<Identifier, IConfigProvider<?>>> freeze()
+    public @NotNull Set<Map.Entry<Identifier, IConfigProvider<?>>> freeze()
     {
         if (this.frozen)
         {

@@ -70,17 +70,14 @@ public record SnapshotCache(@NotNull Map<String, List<SnapshotGroup>> namespaces
 
         //**************************************************************************************************************
         @SuppressWarnings("unchecked")
-        static <Container> @NotNull Snapshot from(@NotNull final Object                  container,
-                                                  @NotNull final PropertySpec<Container> spec)
+        static <Container> @NotNull Snapshot from(final @NotNull Object                  container,
+                                                  final @NotNull PropertySpec<Container> spec)
         {
             return new Snapshot(spec.pointer(), spec.get((Container) container).getValue());
         }
 
         //==============================================================================================================
-        public @NotNull Snapshot withValue(@NotNull final Value value)
-        {
-            return new Snapshot(this.pointer, value);
-        }
+        public @NotNull Snapshot withValue(final @NotNull Value value) { return new Snapshot(this.pointer, value); }
     }
 
     public record SnapshotGroup(@NotNull String path, List<Snapshot> snapshots)
@@ -93,28 +90,28 @@ public record SnapshotCache(@NotNull Map<String, List<SnapshotGroup>> namespaces
                 SnapshotGroup::new);
 
         //**************************************************************************************************************
-        static @NotNull SnapshotGroup from(@NotNull final Identifier id, @NotNull final IConfigProvider<?> provider)
+        static <T extends IConfigProvider<?>> @NotNull SnapshotGroup from(final @NotNull Identifier id,
+                                                                          final @NotNull T          provider)
         {
             return new SnapshotGroup(
                 id.getPath(),
                 provider.getSpec().flatPropertySpecs().values()
                     .stream()
                     .map(spec -> Snapshot.from(provider.getManagedContainer(), spec))
-                    .collect(ImmutableList.toImmutableList()));
+                    .toList());
         }
         
         //==============================================================================================================
-        public @Nullable Snapshot findSnapshot(@NotNull final JsonPointer pointer)
+        public @Nullable Snapshot findSnapshot(final @NotNull JsonPointer pointer)
         {
-            final Optional<Snapshot> opt_snapshot = this.snapshots
+            return this.snapshots
                 .stream()
                 .filter(snap -> snap.pointer.equals(pointer))
-                .findFirst();
-            
-            return opt_snapshot.orElse(null);
+                .findFirst()
+                .orElse(null);
         }
         
-        public void setSnapshot(@NotNull final JsonPointer pointer, @NotNull final Value newValue)
+        public void setSnapshot(final @NotNull JsonPointer pointer, final @NotNull Value newValue)
         {
             for (int i = 0; i < this.snapshots.size(); ++i)
             {
@@ -138,17 +135,20 @@ public record SnapshotCache(@NotNull Map<String, List<SnapshotGroup>> namespaces
             SnapshotCache::new);
 
     //******************************************************************************************************************
-    public static @NotNull SnapshotCache from(@NotNull final Map<Identifier, IConfigProvider<?>> registry)
+    public static <T extends IConfigProvider<?>> @NotNull SnapshotCache from(final @NotNull Map<Identifier, T> registry)
     {
-        final Map<String, List<SnapshotGroup>> result = new LinkedHashMap<>();
-        registry.keySet()
+        final Map<String, List<SnapshotGroup>> result  = new LinkedHashMap<>();
+        final Set<Map.Entry<Identifier, T>>    entries = registry.entrySet();
+        
+        registry
+            .keySet()
             .stream()
             .map(Identifier::getNamespace)
             .distinct()
             .forEach(namespace ->
                 result.put(
                     namespace,
-                    registry.entrySet()
+                    entries
                         .stream()
                         .filter(e -> e.getKey().getNamespace().equals(namespace))
                         .map(e -> SnapshotGroup.from(e.getKey(), e.getValue()))
@@ -157,7 +157,7 @@ public record SnapshotCache(@NotNull Map<String, List<SnapshotGroup>> namespaces
     }
 
     //******************************************************************************************************************
-    public @Nullable SnapshotGroup getGroup(@NotNull final Identifier id)
+    public @Nullable SnapshotGroup getGroup(final @NotNull Identifier id)
     {
         final List<SnapshotGroup> groups = this.namespaces.get(id.getNamespace());
         
@@ -177,7 +177,7 @@ public record SnapshotCache(@NotNull Map<String, List<SnapshotGroup>> namespaces
         return null;
     }
     
-    public @Nullable Snapshot getSnapshot(@NotNull final Identifier id, @NotNull final JsonPointer pointer)
+    public @Nullable Snapshot getSnapshot(final @NotNull Identifier id, final @NotNull JsonPointer pointer)
     {
         final SnapshotGroup group = this.getGroup(id);
         
@@ -186,7 +186,7 @@ public record SnapshotCache(@NotNull Map<String, List<SnapshotGroup>> namespaces
             return null;
         }
         
-        for (final Snapshot snapshot : group.snapshots)
+        for (final var snapshot : group.snapshots)
         {
             if (snapshot.pointer.equals(pointer))
             {
@@ -197,15 +197,15 @@ public record SnapshotCache(@NotNull Map<String, List<SnapshotGroup>> namespaces
         return null;
     }
     
-    public @Nullable Snapshot getSnapshot(@NotNull final PropertyId propertyId)
+    public @Nullable Snapshot getSnapshot(final @NotNull PropertyId propertyId)
     {
-        return getSnapshot(propertyId.providerId(), propertyId.pointer());
+        return this.getSnapshot(propertyId.providerId(), propertyId.pointer());
     }
     
     //==================================================================================================================
-    public boolean setSnapshot(@NotNull final Identifier  id,
-                               @NotNull final JsonPointer pointer,
-                               @NotNull final Value       value)
+    public boolean setSnapshot(final @NotNull Identifier  id,
+                               final @NotNull JsonPointer pointer,
+                               final @NotNull Value       value)
     {
         final SnapshotGroup group = this.getGroup(id);
         
@@ -228,7 +228,7 @@ public record SnapshotCache(@NotNull Map<String, List<SnapshotGroup>> namespaces
         return false;
     }
     
-    public boolean setSnapshot(@NotNull final PropertyId propertyId, @NotNull final Value value)
+    public boolean setSnapshot(final @NotNull PropertyId propertyId, final @NotNull Value value)
     {
         return this.setSnapshot(propertyId.providerId(), propertyId.pointer(), value);
     }

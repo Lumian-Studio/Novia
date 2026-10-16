@@ -39,9 +39,7 @@ import com.google.common.collect.ImmutableList;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.NotNull;
 import xyz.lumialights.novia.api.config.schema.IPropertySchema;
-import xyz.lumialights.novia.api.config.schema.builtin.*;
 import xyz.lumialights.novia.api.config.schema.builtin.InterfaceSchema;
-import xyz.lumialights.novia.api.config.schema.builtin.atomic.*;
 import xyz.lumialights.novia.api.core.serialisation.Value;
 
 import java.util.*;

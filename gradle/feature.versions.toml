@@ -1,0 +1,17 @@
+[versions]
+novia = '1.0.0'
+
+# Modules
+core        = '1.0.0'
+config      = '1.0.0'
+gui         = '1.0.0'
+yaml        = '1.0.0'
+
+[libraries]
+core   = { module = 'xyz.lumian.novia.api:core-api',    version.ref = 'core'    }
+config = { module = 'xyz.lumian.novia.api:config-api',  version.ref = 'config'  }
+gui    = { module = 'xyz.lumian.novia.api:gui-api',     version.ref = 'gui'     }
+yaml   = { module = 'xyz.lumian.novia.api:yaml-api',    version.ref = 'yaml'    }
+
+[bundles]
+novia = [ 'core', ] #'config', 'gui', 'yaml' ]

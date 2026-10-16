@@ -2,22 +2,26 @@
     "schemaVersion": 1,
     "id": "novia-core-api",
     "version": "${version}",
-    "name": "${mod_name}",
-    "description": "Core module for Novia.",
+    "name": "${name}",
+    "description": "Core module for Novia API.",
     "authors": [ "LumiaLights" ],
     "contact": {
         "homepage": "https://lumialights.xyz/",
-        "sources": "https://github.com/LumiaLights/Novia",
-        "issues": "https://github.com/LumiaLights/Novia/issues"
+        "sources": "https://github.com/LumiaLights/NoviaAPI",
+        "issues": "https://github.com/LumiaLights/NoviaAPI/issues"
     },
     "license": "MIT",
     "icon": "assets/novia-core-api/icon.png",
     "environment": "*",
     "entrypoints": {
-        "main": [ "xyz.lumialights.novia.api.core.Novia" ],
-        "client": [ "xyz.lumialights.novia.api.core.client.NoviaClientHandler" ],
+        "main": [
+            "xyz.lumian.novia.api.core.Novia"
+        ],
+        "client": [
+            "xyz.lumian.novia.api.core.client.NoviaClientHandler"
+        ],
         "server": [
-          "xyz.lumialights.novia.api.core.NoviaServerHandler"
+            "xyz.lumian.novia.api.core.NoviaServerHandler"
         ]
     },
     "mixins": [
@@ -28,8 +32,8 @@
         }
     ],
     "depends": {
-        "fabricloader": ">=${loader_version}",
+        "fabricloader": "${fabric_loader_version}",
         "java": "${java_version}",
-        "minecraft": ">=${minecraft_version}"
+        "minecraft": "${minecraft_version}"
     }
 }

@@ -42,7 +42,6 @@ import xyz.lumialights.novia.api.config.client.ConfigApiLangClient;
 import xyz.lumialights.novia.api.config.client.gui.ConfigScreen;
 import xyz.lumialights.novia.api.core.serialisation.Value;
 import xyz.lumialights.novia.api.gui.component.integration.IStatefulComponent;
-import xyz.lumialights.novia.api.gui.component.provided.NVSimpleButton;
 import xyz.lumialights.novia.api.gui.event.GuiEvent;
 
 import java.util.*;

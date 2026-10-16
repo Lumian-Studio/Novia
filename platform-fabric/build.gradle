@@ -1,0 +1,41 @@
+plugins {
+    id 'novia.fabric-conventions'
+}
+
+static def addFeature(proj, lib)
+{
+    proj.dependencies {
+        implementation project(path: ":${lib.get().name}")
+    }
+}
+
+static def nestedJar(proj, lib)
+{
+    proj.dependencies {
+        include lib
+    }
+}
+
+subprojects { p ->
+    if (p.name == "test-mod")
+    {
+        return
+    }
+
+    apply plugin: 'novia.fabric-conventions'
+}
+
+configurations {
+    nestedJars {
+        transitive = false
+    }
+}
+
+dependencies {
+    features.bundles.novia.get().name.each { module ->
+        api project(path: ":${module}")
+        nestedJars project(":${module}")
+    }
+}
+
+loom.nestJars(tasks.named("jar"), configurations.nestedJars)

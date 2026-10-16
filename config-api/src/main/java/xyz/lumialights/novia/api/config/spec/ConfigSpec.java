@@ -58,15 +58,13 @@ import java.util.function.Supplier;
 
 
 //**********************************************************************************************************************
-/**
- * Describes a specification for a config container class.
- * @param flatPropertySpecs A flat map of property specifications mapped to their JSON pointer in the configuration.
- * @param rootGroupSpec     The root group specification that contains all the properties and groups on the first level.
- * @param containerClass    The class instance of the container that this specification describes.
- * @param id                The ID of the specification
- * @param generator         The container generator function that creates new instances of the given class.
- * @param <Container>       The config container type
- */
+/// Describes a specification for a config container class.
+/// @param flatPropertySpecs A flat map of property specifications mapped to their JSON pointer in the configuration.
+/// @param rootGroupSpec     The root group specification that contains all the properties and groups on the first level.
+/// @param containerClass    The class instance of the container that this specification describes.
+/// @param id                The ID of the specification
+/// @param generator         The container generator function that creates new instances of the given class.
+/// @param <Container>       The config container type
 public record ConfigSpec<Container>(
     @NotNull PropertySpecMap<Container> flatPropertySpecs,
     @NotNull GroupSpec<Container>       rootGroupSpec,
@@ -82,17 +80,14 @@ public record ConfigSpec<Container>(
     private static final Map<Identifier, ConfigSpec<?>> REGISTRY = new HashMap<>();
     
     //******************************************************************************************************************
-    public static @Nullable ConfigSpec<?> findSpec(@NotNull final Identifier id)
-    {
-        return REGISTRY.get(id);
-    }
+    public static @Nullable ConfigSpec<?> findSpec(final @NotNull Identifier id) { return ConfigSpec.REGISTRY.get(id); }
     
     //******************************************************************************************************************
     public ConfigSpec
     {
-        if (REGISTRY.containsKey(id))
+        if (ConfigSpec.REGISTRY.containsKey(id))
         {
-            throw new ConfigRegistryException("Config spec with id '%s' is already registered".formatted(id));
+            throw new ConfigRegistryException("config spec with id '%s' is already registered".formatted(id));
         }
         
         final Container test_container = generator.get();
@@ -113,16 +108,14 @@ public record ConfigSpec<Container>(
                 ex);
         }
         
-        REGISTRY.put(id, this);
+        ConfigSpec.REGISTRY.put(id, this);
     }
     
     //==================================================================================================================
-    /**
-     * Creates a new serialisation codec for the specified container instance.
-     * @param container The container instance
-     * @return The new codec
-     */
-    public @NotNull Codec<Container> createCodec(@NotNull final Container container)
+    /// Creates a new serialisation codec for the specified container instance.
+    /// @param container The container instance
+    /// @return The new codec
+    public @NotNull Codec<Container> createCodec(final @NotNull Container container)
     {
         return new Codec<>()
         {
@@ -130,50 +123,39 @@ public record ConfigSpec<Container>(
             @Override
             public <T> DataResult<Pair<Container, T>> decode(@NotNull final DynamicOps<T> ops, @NotNull final T input)
             {
-                return rootGroupSpec.decode(container, ops, input).map((t -> Pair.of(container, t)));
+                return ConfigSpec.this.rootGroupSpec.decode(container, ops, input).map((t -> Pair.of(container, t)));
             }
 
             @Override
-            public <T> DataResult<T> encode(@Nullable final Container     ignored,
-                                            @NotNull  final DynamicOps<T> ops,
-                                            @NotNull  final T             prefix)
+            public <T> DataResult<T> encode(final @Nullable Container     ignored,
+                                            final @NotNull  DynamicOps<T> ops,
+                                            final @NotNull  T             prefix)
             {
-                return rootGroupSpec.encode(container, ops, prefix);
+                return ConfigSpec.this.rootGroupSpec.encode(container, ops, prefix);
             }
         };
     }
 
-    /**
-     * Creates a new instance of the container class.
-     * @return The new container instance
-     */
-    public @NotNull Container create()
-    {
-        return this.generator.get();
-    }
+    /// Creates a new instance of the container class.
+    /// @return The new container instance
+    public @NotNull Container create() { return this.generator.get(); }
 
-    /**
-     * Binds the given container instance's properties to this specification.
-     * <p>
-     * The given handler will be executed before any of the container's properties set their new value,
-     * which allows some pre-evaluation logic if needed.
-     * @param container The container to bind
-     * @param handler   The change handler to attach to the properties
-     */
-    public void bindContainer(@NotNull final Container container, @Nullable final IPropertyConfigHandler handler)
+    /// Binds the given container instance's properties to this specification. The given handler will be executed before
+    /// any of the container's properties set their new value, which allows some pre-evaluation logic if needed.
+    /// @param container The container to bind
+    /// @param handler   The change handler to attach to the properties
+    public void bindContainer(final @NotNull Container container, final @Nullable IPropertyConfigHandler handler)
     {
         this.flatPropertySpecs.values().forEach(spec -> spec.bind(container, handler));
     }
 
     //==================================================================================================================
-    /**
-     * Reads the configuration from the specified file and modifies the given container instance based on the readings.
-     * @param ops       The serialiser instance to use
-     * @param file      The file to read from
-     * @param container The container instance to modify
-     * @throws ConfigSerialisationException If there was a problem reading or decoding the configuration file
-     */
-    public <T> void read(@NotNull final DynamicOps<T> ops, @NotNull final Path file, @NotNull final Container container)
+    /// Reads the configuration from the specified file and modifies the given container instance based on the readings.
+    /// @param ops       The serialiser instance to use
+    /// @param file      The file to read from
+    /// @param container The container instance to modify
+    /// @throws ConfigSerialisationException If there was a problem reading or decoding the configuration file
+    public <T> void read(final @NotNull DynamicOps<T> ops, final @NotNull Path file, final @NotNull Container container)
         throws ConfigSerialisationException
     {
         try
@@ -182,20 +164,18 @@ public record ConfigSpec<Container>(
 
             if (serialiser == null)
             {
-                throw new ConfigSerialisationException(String.format(
-                    "problem decoding container %s, didn't know how to decode with %s",
-                    this.containerClass.getName(), ops.getClass().getName()));
+                throw new ConfigSerialisationException(
+                    "problem decoding container %s, didn't know how to decode with %s"
+                        .formatted(this.containerClass.getName(), ops.getClass().getName()));
             }
 
             final T                     input  = serialiser.deserialise(Files.newInputStream(file));
-            final DataResult<Container> result = createCodec(container).parse(ops, input);
+            final DataResult<Container> result = this.createCodec(container).parse(ops, input);
             
             if (result.isError())
             {
                 final DataResult.Error<Container> error = result.error().orElseThrow();
-                throw new ConfigSerialisationException(String.format(
-                    "problem decoding container: %s",
-                    error.message()));
+                throw new ConfigSerialisationException("problem decoding container: " + error.message());
             }
         }
         catch (final IOException ex)
@@ -213,9 +193,9 @@ public record ConfigSpec<Container>(
      * @param container The container instance to modify
      * @throws ConfigSerialisationException If there was a problem writing or encoding the configuration file
      */
-    public <T> void write(@NotNull final DynamicOps<T> ops,
-                          @NotNull final Path          file,
-                          @NotNull final Container     container)
+    public <T> void write(final @NotNull DynamicOps<T> ops,
+                          final @NotNull Path          file,
+                          final @NotNull Container     container)
         throws ConfigSerialisationException
     {
         try
@@ -225,27 +205,26 @@ public record ConfigSpec<Container>(
             if (node.isError())
             {
                 final DataResult.Error<T> error = node.error().orElseThrow();
-                throw new ConfigSerialisationException(String.format(
-                    "problem encoding container %s, %s",
-                    this.containerClass.getName(), error.message()));
+                throw new ConfigSerialisationException("problem encoding container %s, %s"
+                    .formatted(this.containerClass.getName(), error.message()));
             }
 
             final IDynamicOpsSerialiser<T> serialiser = DynamicOpsSerialisers.get(ops);
 
             if (serialiser == null)
             {
-                throw new ConfigSerialisationException(String.format(
-                    "problem encoding container %s, didn't know how to encode with %s",
-                    this.containerClass.getName(), ops.getClass().getName()));
+                throw new ConfigSerialisationException(
+                    "problem encoding container %s, didn't know how to encode with %s"
+                        .formatted(this.containerClass.getName(), ops.getClass().getName()));
             }
 
             serialiser.serialise(node.getOrThrow(), Files.newOutputStream(file));
         }
         catch (final IOException ex)
         {
-            throw new ConfigSerialisationException(String.format(
-                "problem writing container %s to file '%s'",
-                this.containerClass.getName(), file), ex);
+            throw new ConfigSerialisationException(
+                "problem writing container %s to file '%s'".formatted(this.containerClass.getName(), file),
+                ex);
         }
     }
 }

@@ -1,0 +1,42 @@
+pluginManagement {
+    repositories {
+        maven {
+            name = 'Fabric'
+            url = 'https://maven.fabricmc.net/'
+        }
+
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+dependencyResolutionManagement {
+    versionCatalogs {
+        create('libs') {
+            from(files('../gradle/libs.versions.toml'))
+        }
+        create('features') {
+            from(files('../gradle/feature.versions.toml'))
+        }
+        create('platform') {
+            from(files('../gradle/fabric.versions.toml'))
+        }
+    }
+}
+
+final def feature_modules = [
+	'core',
+	//'config',
+	'gui',
+	'yaml'
+]
+
+rootProject.name = 'Novia Fabric'
+feature_modules.forEach { module ->
+    final def module_name = "../${module}-api"
+    include module_name
+    project(":${module_name}").name = "${module}-api"
+}
+
+include "../test-mod"
+project(":../test-mod").name = "test-mod"

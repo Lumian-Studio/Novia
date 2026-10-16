@@ -59,11 +59,8 @@ public record ConfigS2CConfigSyncPayload(@NotNull PacketByteBuf byteBuf)
     }
 
     //******************************************************************************************************************
-    private void write(@NotNull final PacketByteBuf buf)
-    {
-        buf.writeBytes(byteBuf);
-    }
+    private void write(final @NotNull PacketByteBuf buf) { buf.writeBytes(this.byteBuf); }
 
     //==================================================================================================================
-    @Override public Id<? extends CustomPayload> getId() { return ID; }
+    @Override public @NotNull Id<ConfigS2CConfigSyncPayload> getId() { return ConfigS2CConfigSyncPayload.ID; }
 }

@@ -38,7 +38,6 @@ package xyz.lumialights.novia.api.config.spec.builder;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 import xyz.lumialights.novia.api.config.property.Property;
-import xyz.lumialights.novia.api.config.spec.*;
 import xyz.lumialights.novia.api.core.util.JsonPointer;
 
 import java.util.function.Function;

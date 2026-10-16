@@ -45,11 +45,14 @@ import xyz.lumialights.novia.api.config.ApiDefine;
 import xyz.lumialights.novia.api.config.ConfigManager;
 import xyz.lumialights.novia.api.config.PropertyId;
 import xyz.lumialights.novia.api.config.client.document.ScreenDocument;
+import xyz.lumialights.novia.api.config.client.provider.IProviderAttachment;
+import xyz.lumialights.novia.api.config.client.provider.IProviderAttachmentAccessor;
 import xyz.lumialights.novia.api.config.property.Property;
 import xyz.lumialights.novia.api.config.provider.BaseNetworkProvider;
 import xyz.lumialights.novia.api.config.provider.IConfigProvider;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import xyz.lumialights.novia.api.core.util.Colour;
 import xyz.lumialights.novia.api.gui.canvas.Canvas;
@@ -82,15 +85,16 @@ public class ConfigScreen
     }
 
     //******************************************************************************************************************
-    private final ConfigScreenLookAndFeel    lookAndFeel;
-    private final TabManager                 tabManager;
-    private final TabList                    tabList;
-    private final OptionList                 optList;
-    private final NVSimpleButton             viewButton;
-    private final NVLabel                    title;
-    private final TreeMap<PropertyId, Value> cache;
-    private final EditPanel                  editPanel;
-
+    private final Map<Identifier, IProviderAttachment> attachments;
+    private final ConfigScreenLookAndFeel              lookAndFeel;
+    private final TabManager                           tabManager;
+    private final TabList                              tabList;
+    private final OptionList                           optList;
+    private final NVSimpleButton                       viewButton;
+    private final NVLabel                              title;
+    private final TreeMap<PropertyId, Value>           cache;
+    private final EditPanel                            editPanel;
+    
     private boolean isCategorised = true;
 
     //******************************************************************************************************************
@@ -101,9 +105,9 @@ public class ConfigScreen
     {
         super(document.title().orElseGet(() -> Text.literal(modId)), parent);
         
-        Objects.requireNonNull(modId,       "modId must not be null");
+        Objects.requireNonNull(modId,       "mod id must not be null");
         Objects.requireNonNull(document,    "document must not be null");
-        Objects.requireNonNull(lookAndFeel, "Look and feel must not be null");
+        Objects.requireNonNull(lookAndFeel, "lookandfeel must not be null");
         
         this.lookAndFeel = lookAndFeel;
         this.cache       = new TreeMap<>(Comparator.comparing(e -> e.providerId().toString()));
@@ -121,6 +125,21 @@ public class ConfigScreen
             tab.title(),
             tab.colour().orElse(new Colour(0xFF3C8527))));
         this.tabList.refreshList();
+        
+        this.attachments = this.tabManager
+            .getEntries()
+            .stream()
+            .flatMap(entry -> entry
+                .groups()
+                .stream()
+                .flatMap(group -> group
+                    .entries()
+                    .stream()
+                    .map(TabManager.PropertyEntry::provider)))
+            .distinct()
+            .collect(Collectors.toMap(
+                IConfigProvider::getId,
+                (provider -> ((IProviderAttachmentAccessor)(Object) provider).novia$getAttachment())));
         
         this.viewButton = this.addChild(new NVSimpleButton());
         this.viewButton.setIcon(this.isCategorised
@@ -143,6 +162,7 @@ public class ConfigScreen
                 ? ConfigScreen.TEXTURE_CATEGORISED
                 : ConfigScreen.TEXTURE_UNCATEGORISED);
         });
+        
         this.optList.setDisplayMode(new OptionList.DisplayMode(
             null,
             Comparator.comparing(Text::getString),
@@ -155,11 +175,11 @@ public class ConfigScreen
     }
     
     //==================================================================================================================
-    public void showEditScreen(final @Nullable PropertyId         propertyId,
-                               final @NotNull  Text               title,
-                               final @NotNull  IStatefulComponent content)
+    public void showEditScreen(final @NotNull PropertyId         propertyId,
+                               final @NotNull Text               title,
+                               final @NotNull IStatefulComponent content)
     {
-        this.editPanel.setProperty(propertyId, );
+        this.editPanel.setProperty(propertyId, title, content);
     }
     
     //==================================================================================================================
@@ -238,9 +258,8 @@ public class ConfigScreen
             return;
         }
         
-        final Property property = this.getProperty(
-            id.pointer(),
-            Objects.requireNonNull(ConfigManager.REGISTRY.get(id.providerId())));
+        final IConfigProvider<?> provider = Objects.requireNonNull(ConfigManager.REGISTRY.get(id.providerId()));
+        final Property           property = this.getProperty(id.pointer(), provider);
         
         if (property.getValue().equals(value))
         {
@@ -270,10 +289,6 @@ public class ConfigScreen
             .stream()
             .map(PropertyId::providerId)
             .distinct()
-            .forEach(id ->
-            {
-                final IConfigProvider<?> provider = ConfigManager.REGISTRY.get(id);
-                provider.getSpec().write();
-            });
+            .forEach(id -> this.attachments.get(id).save());
     }
 }

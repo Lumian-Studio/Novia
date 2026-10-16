@@ -1,0 +1,24 @@
+plugins {
+    id 'groovy-gradle-plugin'
+}
+
+repositories {
+    maven {
+        name = 'Fabric'
+        url = 'https://maven.fabricmc.net/'
+    }
+
+    mavenCentral()
+    gradlePluginPortal()
+}
+
+static def getPlugin(provider)
+{
+    final def got = provider.get()
+    return "${got.pluginId}:${got.pluginId}.gradle.plugin:${got.version}"
+}
+
+dependencies {
+    implementation(getPlugin(libs.plugins.loom))
+    implementation(getPlugin(libs.plugins.buildconfig))
+}

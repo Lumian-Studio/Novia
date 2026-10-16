@@ -47,10 +47,10 @@ public class ConfigApiPayloads
     //******************************************************************************************************************
     public static void initialise()
     {
-        registerS2CConfig(PayloadTypeRegistry.configurationS2C());
-        registerS2CPlay  (PayloadTypeRegistry.playS2C());
-        registerC2SConfig(PayloadTypeRegistry.configurationC2S());
-        registerC2SPlay  (PayloadTypeRegistry.playC2S());
+        ConfigApiPayloads.registerS2CConfig(PayloadTypeRegistry.configurationS2C());
+        ConfigApiPayloads.registerS2CPlay  (PayloadTypeRegistry.playS2C());
+        ConfigApiPayloads.registerC2SConfig(PayloadTypeRegistry.configurationC2S());
+        ConfigApiPayloads.registerC2SPlay  (PayloadTypeRegistry.playC2S());
     }
 
     //==================================================================================================================
@@ -76,5 +76,8 @@ public class ConfigApiPayloads
     }
     
     // Server-bound : Play-Phase
-    private static void registerC2SPlay(@NotNull final PayloadTypeRegistry<? extends PacketByteBuf> ignored) {}
+    private static void registerC2SPlay(@NotNull final PayloadTypeRegistry<? extends PacketByteBuf> registry)
+    {
+        registry.register(PlayC2SConfigSerialisePayload.ID, PlayC2SConfigSerialisePayload.CODEC);
+    }
 }

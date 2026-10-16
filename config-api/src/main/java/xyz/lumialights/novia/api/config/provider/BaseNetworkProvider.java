@@ -36,25 +36,27 @@
 package xyz.lumialights.novia.api.config.provider;
 
 import com.mojang.serialization.DynamicOps;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.lumialights.novia.api.config.PropertyValidationException;
 import xyz.lumialights.novia.api.config.property.Property;
+import xyz.lumialights.novia.api.core.Novia;
 import xyz.lumialights.novia.api.core.serialisation.Value;
 import xyz.lumialights.novia.api.core.util.JsonPointer;
 import xyz.lumialights.novia.api.core.util.Pair;
 
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
 
 
 //**********************************************************************************************************************
-public abstract class BaseNetworkProvider<Container>
+public sealed abstract class BaseNetworkProvider<Container>
     implements IConfigProvider<Container>
+    permits ConfigProvider
 {
     //******************************************************************************************************************
     private final Identifier    id;
@@ -64,11 +66,11 @@ public abstract class BaseNetworkProvider<Container>
     private boolean isRemote = false;
     
     //******************************************************************************************************************
-    public BaseNetworkProvider(final @NotNull Identifier id, final boolean optional, final @NotNull DynamicOps<?> ops)
+    public BaseNetworkProvider(final @NotNull Identifier id, final @NotNull DynamicOps<?> ops, final boolean optional)
     {
-        this.id       = id;
+        this.id       = Objects.requireNonNull(id,  "ID must not be null");
+        this.ops      = Objects.requireNonNull(ops, "dynamic ops must not be null");
         this.optional = optional;
-        this.ops      = ops;
     }
     
     //==================================================================================================================
@@ -77,24 +79,16 @@ public abstract class BaseNetworkProvider<Container>
     ///
     /// This is the container the client (render thread) should be using to read configuration data, it will be
     /// automatically synced whenever the server has updates (and if the configuration is actually synced).
+    ///
+    /// Do not use this container to update the client configuration, this should be done over the managed container
+    /// which will sync to the client container automatically.
     /// @return The instance of the client container
     public abstract @Nullable Container getClientContainer();
-    
-    /// Gets the server container managed by this config provider. The managed container will never be `null`, but
-    /// should not be read when the client is connected to a remote server.
-    ///
-    /// This is the container the server (server thread) should be using to read configuration data, it is also,
-    /// other than the client container, the modification endpoint; by that means, if the client container should update
-    /// its properties, this should be done through the managed container which will then push the updates to the client
-    /// container automatically.
-    /// @return The instance of the server container
-    @Override
-    public abstract @NotNull Container getManagedContainer();
     
     @Override public @NotNull Identifier    getId()  { return this.id; }
     @Override public @NotNull DynamicOps<?> getOps() { return this.ops; }
     
-    /// Returns a list of all properties that is managed by the client container.
+    /// Returns a list of all properties that is managed by the client container. (see [#getClientContainer()])
     /// @return A list of client container properties
     public @NotNull List<Property> getClientProperties()
     {
@@ -106,14 +100,6 @@ public abstract class BaseNetworkProvider<Container>
         }
         
         return this.getPropertiesForContainer(client);
-    }
-    
-    /// Returns a list of all properties that is managed by the server container.
-    /// @return A list of server container properties
-    @Override
-    public @NotNull List<Property> getManagedProperties()
-    {
-        return IConfigProvider.super.getManagedProperties();
     }
     
     //------------------------------------------------------------------------------------------------------------------
@@ -133,7 +119,7 @@ public abstract class BaseNetworkProvider<Container>
     protected void setRemote(final boolean isRemote) { this.isRemote = isRemote; }
     
     //==================================================================================================================
-    @Override public final boolean isSynced() { return true; }
+    @Override public boolean isSynced() { return true; }
     
     /// Determines whether this config provider is an optional provider.
     ///
@@ -147,6 +133,42 @@ public abstract class BaseNetworkProvider<Container>
     /// uses an integrated server (is in single player mode), this will return `false`.
     /// @return `true` if this provider is synchronised remotely
     public boolean isRemote() { return this.isRemote; }
+    
+    //==================================================================================================================
+    @Override
+    public boolean save()
+    {
+        if (!Novia.getInstance().isServerThread())
+        {
+            Novia.LOGGER.error("trying to save config provider outside the server thread");
+        }
+        
+        return IConfigProvider.super.save();
+    }
+    
+    @Override
+    public boolean load(final @NotNull Path file)
+    {
+        if (!Novia.getInstance().isServerThread())
+        {
+            Novia.LOGGER.error("trying to load config provider outside the server thread");
+        }
+        
+        return IConfigProvider.super.load(file);
+    }
+    
+    //==================================================================================================================
+    @ApiStatus.Internal
+    public boolean saveUnchecked()
+    {
+        return IConfigProvider.super.save();
+    }
+    
+    @ApiStatus.Internal
+    public boolean loadUnchecked(final @NotNull Path file)
+    {
+        return IConfigProvider.super.load(file);
+    }
     
     //==================================================================================================================
     abstract void updateClient(@NotNull List<Pair<JsonPointer, Value>> values, boolean isRemote)

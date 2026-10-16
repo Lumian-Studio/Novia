@@ -57,8 +57,10 @@ import java.util.function.Function;
 
 
 //**********************************************************************************************************************
-public record SynchroniseServerConfigurationsTask(@NotNull SnapshotCache                           cache,
-                                                  @NotNull Map<Identifier, BaseNetworkProvider<?>> providers)
+public record SynchroniseServerConfigurationsTask(
+    @NotNull SnapshotCache                           cache,
+    @NotNull Map<Identifier, BaseNetworkProvider<?>> providers
+)
     implements ServerPlayerConfigurationTask
 {
     //******************************************************************************************************************
@@ -68,8 +70,7 @@ public record SynchroniseServerConfigurationsTask(@NotNull SnapshotCache        
     private static final int MAX_PAYLOAD_SIZE = 1048576;
 
     //******************************************************************************************************************
-    @Override
-    public Key getKey() { return KEY; }
+    @Override public Key getKey() { return SynchroniseServerConfigurationsTask.KEY; }
 
     //==================================================================================================================
     @Override
@@ -89,7 +90,7 @@ public record SynchroniseServerConfigurationsTask(@NotNull SnapshotCache        
                 buf.writeVarInt (config_entry.snapshots().size());
                 buf.writeString (config_entry.path());
                 
-                final BaseNetworkProvider<?> provider = (BaseNetworkProvider<?>) this.providers
+                final BaseNetworkProvider<?> provider = this.providers
                     .get(Identifier.of(namespace_entry.getKey(), config_entry.path()));
                 buf.writeBoolean(provider.isOptional());
                 
@@ -111,11 +112,10 @@ public record SynchroniseServerConfigurationsTask(@NotNull SnapshotCache        
     }
     
     //------------------------------------------------------------------------------------------------------------------
-    private <T extends CustomPayload> void sendPackets(
-        @NotNull final PacketByteBuf                          buf,
-        @NotNull final Consumer<Packet<?>>                    sender,
-        @NotNull final Function<CustomPayload, Packet<?>>     packetGenerator,
-        @NotNull final Function<PacketByteBuf, CustomPayload> payloadGenerator)
+    private void sendPackets(@NotNull final PacketByteBuf                          buf,
+                             @NotNull final Consumer<Packet<?>>                    sender,
+                             @NotNull final Function<CustomPayload, Packet<?>>     packetGenerator,
+                             @NotNull final Function<PacketByteBuf, CustomPayload> payloadGenerator)
     {
         final Consumer<PacketByteBuf> make_send = (b ->
             sender.accept(packetGenerator.apply(payloadGenerator.apply(b))));
@@ -125,8 +125,11 @@ public record SynchroniseServerConfigurationsTask(@NotNull SnapshotCache        
 
 		while (byte_start < total_bytes)
         {
-			final int           payload_size = Math.min((total_bytes - byte_start), MAX_PAYLOAD_SIZE);
+			final int           payload_size = Math.min(
+                (total_bytes - byte_start),
+                SynchroniseServerConfigurationsTask.MAX_PAYLOAD_SIZE);
 			final PacketByteBuf payload_buf  = PacketByteBufs.slice(buf, byte_start, payload_size);
+            
             make_send.accept(payload_buf);
             byte_start += payload_size;
 		}

@@ -1,18 +1,10 @@
-pluginManagement {
-    repositories {
-        maven {
-            name = 'Fabric'
-            url  = 'https://maven.fabricmc.net/'
-        }
+final def platforms = [
+	'fabric'
+	//'neoforge'
+]
 
-        gradlePluginPortal()
-    }
-}
+// Our conventions
+includeBuild('build-logic')
 
-rootProject.name = 'novia'
-
-include "core-api"
-include "yaml-api"
-include "gui-api"
-include "config-api"
-include "test-mod"
+// For each platform, we build an extra project hierarchy
+platforms.forEach { plat -> includeBuild("platform-${plat}") }
