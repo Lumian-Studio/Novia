@@ -205,26 +205,15 @@ public final class Canvas
 
         public static Frame forLayer(final ScreenLayer layer)
         {
-            return new Frame(
-                layer.getBounds(),
-                layer.getLayerFont(),
-                layer.getLayerTemplate(),
-                layer.getPalette(),
-                new AffineTransform(),
-                1.0f,
-                true
-            );
+            return new Frame(layer.getBounds(), layer.getLayerFont(), layer.getLayerTemplate(), layer.getPalette(),
+                             new AffineTransform(), 1.0f, true);
         }
 
         //==============================================================================================================
         private State createState()
         {
-            return new State(
-                new Rectangle(this.clientRect),
-                this.template.getDefaultBrush().get(),
-                new GuiFont(this.font),
-                new AffineTransform(this.transform),
-                this.opacity);
+            return new State(new Rectangle(this.clientRect), this.template.getDefaultBrush().get(),
+                             new GuiFont(this.font), new AffineTransform(this.transform), this.opacity);
         }
     }
 
@@ -256,7 +245,7 @@ public final class Canvas
             .withFragmentShader("core/gui")
 		    .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
 		    .withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS)
-            .withDepthStencilState(new DepthStencilState(CompareOp.NEVER_PASS, false))
+            .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
             .buildSnippet();
         
         NOVIA_POSITION_TEX_COLOR_SNIPPET = RenderPipeline.builder(RenderPipelines.MATRICES_PROJECTION_SNIPPET)
@@ -266,7 +255,7 @@ public final class Canvas
             .withSampler("Sampler1")
 		    .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
 		    .withVertexFormat(DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS)
-            .withDepthStencilState(new DepthStencilState(CompareOp.NEVER_PASS, false))
+            .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
             .buildSnippet();
         
         NOVIA_GUI = RenderPipelines.register(RenderPipeline.builder(NOVIA_GUI_SNIPPET)
@@ -476,10 +465,7 @@ public final class Canvas
     /// Gets whether the current frame's area (the visible component area) intersects with the specified area.
     /// @param screenRect The absolutely positioned area
     /// @return `true` if the given area intersects with the current frame area
-    public boolean frameIntersects(final Rectangle screenRect)
-    {
-        return screenRect.transform(this::frameIntersects);
-    }
+    public boolean frameIntersects(final Rectangle screenRect) { return screenRect.transform(this::frameIntersects); }
 
     //==================================================================================================================
     /// Sets the brush to a solid colour fill. This operation is stateful (see [Canvas]).
@@ -590,7 +576,7 @@ public final class Canvas
                 ? Canvas.NOVIA_GUI_TEXTURED
                 : Canvas.NOVIA_GUI)));
         
-        final Matrix3x2f            matrix   = (new Matrix3x2f()).mul(transform.getMatrix());
+        final Matrix3x2f            matrix   = new Matrix3x2f(transform.getMatrix());
         final ICanvasState.Renderer renderer = renderState.renderer();
         
         ((GuiRenderStateAccessor) this.renderState).novia$addState(new GuiElementRenderState()
@@ -620,10 +606,8 @@ public final class Canvas
         this.drawShaped(renderer, bounds, null, texture);
     }
     
-    public void drawShaped(final           IShapedRender   renderer,
-                           final           Rectangle       bounds,
-                           final @Nullable RenderPipeline  pipeline,
-                           final @Nullable AbstractTexture texture)
+    public void drawShaped(final IShapedRender renderer, final Rectangle bounds,
+                           final @Nullable RenderPipeline pipeline, final @Nullable AbstractTexture texture)
     {
         final AbstractTexture brush_texture = this.getBrush().getTexture();
         final TextureSetup    setup         = new TextureSetup(
@@ -1078,8 +1062,7 @@ public final class Canvas
     /// @param useBrush Whether to use the currently set brush to apply to the texture
     public void drawSprite(final Identifier spriteId,
                            final int x, final int y, final int width, final int height,
-                           final UvMapping uv,
-                           final boolean useBrush)
+                           final UvMapping uv, final boolean useBrush)
     {
         final TextureAtlasSprite sprite  = this.atlas.getSprite(spriteId);
         final GuiSpriteScaling   scaling = this.getSpriteScaling(sprite);
@@ -1203,8 +1186,8 @@ public final class Canvas
     /// @param rect     The [Rectangle] to draw the texture in
     /// @param uv       The [UvMapping] texture region
     /// @param useBrush Whether to use the currently set brush to apply to the texture
-    public void drawSpriteStretched(final TextureAtlasSprite sprite,
-                                    final Rectangle rect, final UvMapping uv, final boolean useBrush)
+    public void drawSpriteStretched(final TextureAtlasSprite sprite, final Rectangle rect, final UvMapping uv,
+                                    final boolean useBrush)
     {
         rect.accept((x, y, w, h) -> this.drawSpriteStretched(sprite, x, y, w, h, uv, useBrush));
     }
@@ -1687,20 +1670,13 @@ public final class Canvas
         this.framebuffer.clear();
         this.frame = Frame.forLayer(layer);
         this.resetState();
-
         this.renderState.nextStratum();
     }
 
     void initFramebuffer(final GuiScreen screen)
     {
-        this.frame = new Frame(
-            screen.getScreenBounds(),
-            screen.getFont(),
-            screen.getTemplate(),
-            screen,
-            new AffineTransform(),
-            1.0f,
-            true);
+        this.frame = new Frame(screen.getScreenBounds(), screen.getFont(), screen.getTemplate(), screen,
+                               new AffineTransform(), 1.0f, true);
         this.state = this.frame.createState();
     }
 }

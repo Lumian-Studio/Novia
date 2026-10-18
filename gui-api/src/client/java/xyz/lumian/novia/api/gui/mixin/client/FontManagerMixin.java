@@ -35,16 +35,23 @@
  */
 package xyz.lumian.novia.api.gui.mixin.client;
 
-import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.font.AtlasGlyphProvider;
 import net.minecraft.client.gui.font.FontManager;
 import net.minecraft.client.gui.font.FontSet;
+import net.minecraft.client.gui.font.PlayerGlyphProvider;
+import net.minecraft.client.gui.font.glyphs.EffectGlyph;
+import net.minecraft.network.chat.FontDescription;
 import net.minecraft.resources.Identifier;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.gen.Accessor;
-import org.spongepowered.asm.mixin.gen.Invoker;
+import org.spongepowered.asm.mixin.Unique;
+import xyz.lumian.novia.api.gui.font.FontMetrics;
 import xyz.lumian.novia.api.gui.impl.FontManagerAccessor;
+import xyz.lumian.novia.api.gui.impl.FontSetAccessor;
+
+import java.util.Map;
+import java.util.Optional;
 
 
 
@@ -54,16 +61,51 @@ public abstract class FontManagerMixin
     implements FontManagerAccessor
 {
     //******************************************************************************************************************
-    @Shadow @Final private FontManager.CachedFontProvider anyGlyphs;
+    @Unique
+    private static final FontMetrics OBJECT_INFO_METRICS = new FontMetrics(8f, 8f, 1f);
     
     //******************************************************************************************************************
-    @Override public Font.Provider novia$getFontProvider() { return this.anyGlyphs; }
+    @Shadow @Final private FontManager.CachedFontProvider      anyGlyphs;
+    @Shadow @Final private Map<Identifier, AtlasGlyphProvider> atlasProviders;
+    @Shadow @Final private PlayerGlyphProvider                 playerProvider;
+    @Shadow @Final private FontSet                             missingFontSet;
     
-    @Invoker("getFontSetRaw")
-    @Override
-    public abstract FontSet novia$getFontSet(Identifier id);
+    //******************************************************************************************************************
+    @Shadow
+    protected abstract FontSet getFontSetRaw(Identifier id);
     
-    @Accessor("missingFontSet")
+    //==================================================================================================================
+    @Override public EffectGlyph novia$getWhiteGlyph() { return this.anyGlyphs.effect(); }
+    
     @Override
-    public abstract FontSet novia$getMissingFontSet();
+    public Optional<FontInstance> novia$getFontInstance(final FontDescription descriptor)
+    {
+        return Optional.ofNullable(switch (descriptor)
+        {
+            case FontDescription.Resource resource ->
+            {
+                final FontSet set = this.getFontSetRaw(resource.id());
+                
+                if (set == this.missingFontSet)
+                {
+                    yield null;
+                }
+                
+                yield new FontInstance(set.source(true), ((FontSetAccessor) set).novia$getMetrics());
+            }
+            
+            case FontDescription.AtlasSprite sprite -> Optional
+                .ofNullable(this.atlasProviders.get(sprite.atlasId()))
+                .map(prov -> new FontInstance(
+                    prov.sourceForSprite(sprite.spriteId()),
+                    FontManagerMixin.OBJECT_INFO_METRICS))
+                .orElseThrow();
+            
+            case FontDescription.PlayerSprite player   -> new FontInstance(
+                this.playerProvider.sourceForPlayer(player),
+                FontManagerMixin.OBJECT_INFO_METRICS);
+            
+            default -> null;
+        });
+    }
 }

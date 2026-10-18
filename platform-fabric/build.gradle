@@ -5,7 +5,9 @@ plugins {
 static def addFeature(proj, lib)
 {
     proj.dependencies {
-        implementation project(path: ":${lib.get().name}")
+        final def module = lib.get().name
+        api project(":${module}")
+        clientImplementation proj.project(":${module}").sourceSets.client.output
     }
 }
 
@@ -33,7 +35,7 @@ configurations {
 
 dependencies {
     features.bundles.novia.get().name.each { module ->
-        api project(path: ":${module}")
+        api project(":${module}")
         nestedJars project(":${module}")
     }
 }

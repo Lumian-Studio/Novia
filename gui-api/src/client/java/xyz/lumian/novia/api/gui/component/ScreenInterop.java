@@ -745,6 +745,7 @@ public final class ScreenInterop
         
         for (final var addon_layer : this.addonLayers)
         {
+            CanvasAttorney.setLayer(canvas, addon_layer);
             addon_layer.render(canvas);
         }
     }

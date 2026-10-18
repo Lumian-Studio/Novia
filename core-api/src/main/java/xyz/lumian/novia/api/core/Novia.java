@@ -64,7 +64,7 @@ public final class Novia
 {
     //******************************************************************************************************************
     @ApiStatus.Internal
-    public static final Logger LOGGER = LogManager.getLogger();
+    public static final Logger LOGGER = LogManager.getLogger("novia-api");
     
     //------------------------------------------------------------------------------------------------------------------
     @Nullable

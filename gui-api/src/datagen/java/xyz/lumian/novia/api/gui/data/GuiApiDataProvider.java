@@ -37,7 +37,6 @@ package xyz.lumian.novia.api.gui.data;
 
 import net.fabricmc.fabric.api.datagen.v1.DataGeneratorEntrypoint;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
-import net.minecraft.locale.Language;
 import xyz.lumian.novia.api.core.data.lang.NoviaLanguageProvider;
 import xyz.lumian.novia.api.core.lang.LanguageMap;
 import xyz.lumian.novia.api.gui.GuiApiLang;

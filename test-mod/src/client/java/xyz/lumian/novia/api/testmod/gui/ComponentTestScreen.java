@@ -125,7 +125,7 @@ public class ComponentTestScreen
         this.basicComponentsButton = this.addChild(new NVSimpleButton(Component.literal("Basic Components")));
         this.basicComponentsButton.setTooltip(Tooltip.create(Component.literal("Add Listbox Item\nThis is a button haha")));
         this.basicComponentsButton.setTooltipDelay(Duration.ofSeconds(1));
-        this.basicComponentsButton.clicked.subscribe((sender, args) ->
+        this.basicComponentsButton.clicked.subscribe((_, _) ->
         {
             this.testListBox.addItem(new Item(UUID.randomUUID().toString()));
             this.testListBox.refreshList();
@@ -152,7 +152,7 @@ public class ComponentTestScreen
         this.testSlider.range.set(new NormalisedRange(0, 100, 2));
         this.testSlider.displayTextProvider.set(val -> Component.literal("Value: " + val.getValueAsDouble()));
         this.testSlider.setTooltip(Tooltip.create(Component.literal("Slider value: 0%")));
-        this.testSlider.valueChanged.subscribe((sender, args) ->
+        this.testSlider.valueChanged.subscribe((_, _) ->
         {
             final double normalised = this.testSlider.range.get().normalise(this.testSlider.getValueAsDouble());
             this.testSlider.setTooltip(
@@ -216,7 +216,7 @@ public class ComponentTestScreen
     @Override
     public void draw(final Canvas canvas)
     {
-        // lets draw white text
+        // let's draw white text
         canvas.setColour(Colour.WHITE);
         canvas.drawText(
             ("Selected Items: " + this.testListBox.streamSelectedItems().count()),

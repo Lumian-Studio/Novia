@@ -50,6 +50,17 @@ dependencies {
     testImplementation platform.fabric.junit
 }
 
+loom {
+    splitEnvironmentSourceSets()
+
+    mods {
+        "${module_id}" {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.client
+        }
+    }
+}
+
 test {
     useJUnitPlatform()
 }
@@ -72,7 +83,17 @@ java {
 }
 
 loom.runs.configureEach {
-    vmArgs("-enableassertions", "-Dmixin.debug.verify=true", "-Dmixin.debug.countInjections=true")
+    vmArgs(
+        "-enableassertions",
+        "-Dmixin.debug.verify=true",
+        "-Dmixin.debug.countInjections=true",
+        "-Dmixin.checks.interfaces=true",
+		"-Dfabric.resource_loader.debug.reloaders_identity.strict=true",
+		"-XX:+UseZGC",
+		"-XX:+UseCompactObjectHeaders",
+		"-XX:+AlwaysPreTouch",
+		"-XX:+UseStringDeduplication"
+    )
 }
 
 loom.log4jConfigs.from "log4j-dev.xml"
@@ -110,25 +131,10 @@ if (!project.is_source.toBoolean())
     return
 }
 
-loom {
-    splitEnvironmentSourceSets()
-
-    mods {
-        "${module_id}" {
-            sourceSet sourceSets.main
-            sourceSet sourceSets.client
-        }
-    }
-
-    runConfigs.configureEach {
-		ideConfigGenerated = true
-	}
-}
-
 if (project.build_define.toBoolean())
 {
     buildConfig {
-        final def pkg = (project.group + '.api.' + project.module_id)
+        final def pkg = (project.group + '.' + project.module_id)
 
         forClass(pkg, (project.module_id.capitalize() + 'Define')) {
             buildConfigField String.class, 'ID',         module_id
@@ -146,7 +152,7 @@ if (project.do_datagen.toBoolean())
         configureDataGeneration {
             client          = true
             createSourceSet = true
-            modId           = "${module_id}-data"
+            modId           = project.mod_id
         }
     }
 }

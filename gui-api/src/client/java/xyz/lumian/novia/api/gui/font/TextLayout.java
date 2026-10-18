@@ -47,14 +47,13 @@ import com.mojang.datafixers.util.Function3;
 import net.minecraft.client.ComponentCollector;
 import net.minecraft.client.gui.font.glyphs.BakedGlyph;
 import net.minecraft.client.gui.render.TextureSetup;
-import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.network.chat.*;
 import net.minecraft.util.*;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2f;
-import org.joml.Matrix4f;
+import org.joml.Matrix3x2fc;
 import xyz.lumian.novia.api.core.util.Colour;
 import xyz.lumian.novia.api.gui.canvas.Canvas;
 import xyz.lumian.novia.api.gui.canvas.ICanvasState;
@@ -719,7 +718,7 @@ public class TextLayout
         public boolean isBold()   { return (this.boldOffset     > 0f);   }
         
         //==============================================================================================================
-        public void draw(final VertexConsumer consumer, final Matrix4f matrix, final int light)
+        public void draw(final VertexConsumer consumer, final Matrix3x2fc matrix, final int light)
         {
             if (this.isShaded())
             {
@@ -746,7 +745,7 @@ public class TextLayout
         
         //--------------------------------------------------------------------------------------------------------------
         private void drawGlyphVerts(final float x, final float y,
-                                    final Matrix4f matrix, final VertexConsumer vertexConsumer,
+                                    final Matrix3x2fc matrix, final VertexConsumer vertexConsumer,
                                     final VertexPalette palette, final int light)
         {
             final boolean italic      = this.isItalic();
@@ -761,22 +760,22 @@ public class TextLayout
             palette.accept((tl, tr, bl, br) ->
             {
                 vertexConsumer
-                    .addVertex(matrix, (x1 + italic_y1 - bold_offset), (y1 - bold_offset), 0f)
+                    .addVertexWith2DPose(matrix, (x1 + italic_y1 - bold_offset), (y1 - bold_offset))
                     .setUv(this.baked.novia$u0(), this.baked.novia$v0())
                     .setLight(light)
                     .setColor(tl);
                 vertexConsumer
-                    .addVertex(matrix, (x1 + italic_y2 - bold_offset), (y2 + bold_offset), 0f)
+                    .addVertexWith2DPose(matrix, (x1 + italic_y2 - bold_offset), (y2 + bold_offset))
                     .setUv(this.baked.novia$u0(), this.baked.novia$v1())
                     .setLight(light)
                     .setColor(bl);
                 vertexConsumer
-                    .addVertex(matrix, (x2 + italic_y2 + bold_offset), (y2 + bold_offset), 0f)
+                    .addVertexWith2DPose(matrix, (x2 + italic_y2 + bold_offset), (y2 + bold_offset))
                     .setUv(this.baked.novia$u1(), this.baked.novia$v1())
                     .setLight(light)
                     .setColor(br);
                 vertexConsumer
-                    .addVertex(matrix, (x2 + italic_y1 + bold_offset), (y1 - bold_offset), 0f)
+                    .addVertexWith2DPose(matrix, (x2 + italic_y1 + bold_offset), (y1 - bold_offset))
                     .setUv(this.baked.novia$u1(), this.baked.novia$v0())
                     .setLight(light)
                     .setColor(tr);
@@ -791,11 +790,9 @@ public class TextLayout
         @Override
         public void render(final VertexConsumer vertices, final Matrix3x2f matrix)
         {
-            final Matrix4f matrix4f = (new Matrix4f()).mul(matrix);
-            
             for (final var glyph : this.glyphs)
             {
-                glyph.draw(vertices, matrix4f, 15728880);
+                glyph.draw(vertices, matrix, 15728880);
             }
         }
     }
@@ -830,8 +827,8 @@ public class TextLayout
                                    final float x, final float y, final VertexPalette palette)
         {
             palette.accept((tl, tr, bl, br) ->
-                DrawUtil.drawRect((new Matrix4f()).mul(matrix), vertices, 0f, x, y, (x + this.width), (y + this.height),
-                                  tl, tr, bl, br, this.light));
+                DrawUtil.drawRect(matrix, vertices, x, y, (x + this.width), (y + this.height), tl, tr, bl, br,
+                                  this.light));
         }
     }
     
@@ -1225,28 +1222,56 @@ public class TextLayout
                 
                 for (final var glyph : run.textGlyphs)
                 {
-                    final BakedSheetGlyphAccessor baked    = (BakedSheetGlyphAccessor) glyph.baked;
-                    final GlyphInfo               info     = glyph.baked.info();
-                    final GpuTextureView          texture2 = baked.novia$texture();
+                    final BakedGlyph              baked = glyph.baked;
+                    final GpuTextureView          texture2;
+                    final RenderPipeline          pipeline2;
+                    final BakedSheetGlyphAccessor sheet_glyph;
                     
-                    pipeline = baked.novia$renderTypes().guiPipeline();
+                    final float left;
+                    final float up;
+                    final float right;
+                    final float down;
                     
-                    if (texture2 != texture)
+                    if (baked instanceof BakedSheetGlyphAccessor accessor)
+                    {
+                        texture2    = accessor.novia$texture();
+                        pipeline2   = accessor.novia$renderTypes().guiPipeline();
+                        left        = accessor.novia$left();
+                        up          = accessor.novia$up();
+                        right       = accessor.novia$right();
+                        down        = accessor.novia$down();
+                        sheet_glyph = accessor;
+                    }
+                    
+                    // empty glyph
+                    else
+                    {
+                        texture2    = null;
+                        pipeline2   = null;
+                        left        = 0;
+                        up          = 0;
+                        right       = baked.info().getAdvance();
+                        down        = 9f;
+                        sheet_glyph = null;
+                    }
+                    
+                    if (texture2 != texture || pipeline != pipeline2)
                     {
                         if (!drawables.isEmpty() && run_advance > 0f)
                         {
                             states.addLast(new ICanvasState.Renderable(
                                 new GlyphRenderer(new ArrayList<>(drawables)),
-                                texturise.apply(texture, brush.getTexture()), pipeline,
+                                texturise.apply(texture, brush.getTexture()), pipeline2,
                                 new Rectangle(Mth.floor(line_left),  Mth.floor(run_top),
                                               Mth.ceil(run_advance), Mth.ceil(run_height))));
                         }
-        
+                        
                         drawables.clear();
                         
                         line_left  += run_advance;
                         run_advance = 0f;
                         texture     = texture2;
+                        pipeline    = pipeline2;
                     }
                     
                     final VertexPalette text_palette;
@@ -1258,10 +1283,10 @@ public class TextLayout
                         
                         assert (provider != null);
                         text_palette = provider.getPalette(
-                            (origin_x           + (baked.novia$left()  * glyph.scale * size)),
-                            (run_top - line_top + (baked.novia$up()    * glyph.scale * size)),
-                            (origin_x           + (baked.novia$right() * glyph.scale * size)),
-                            (run_top - line_top + (baked.novia$down()  * glyph.scale * size)));
+                            (origin_x           + (left  * glyph.scale * size)),
+                            (run_top - line_top + (up    * glyph.scale * size)),
+                            (origin_x           + (right * glyph.scale * size)),
+                            (run_top - line_top + (down  * glyph.scale * size)));
                         
                         if (shaded)
                         {
@@ -1287,9 +1312,14 @@ public class TextLayout
                         }
                     }
                     
-                    drawables.add(new DrawableGlyph(baked, text_palette, shadow_palette, (line_left + run_advance),
-                                                    (baseline - glyph.ascent), (glyph.scale * size), size,
-                                                    glyph.shadowOffset, glyph.boldOffset, glyph.italicOffset));
+                    if (sheet_glyph != null)
+                    {
+                        drawables.add(new DrawableGlyph(sheet_glyph, text_palette, shadow_palette,
+                                                        (line_left + run_advance), (baseline - glyph.ascent),
+                                                        (glyph.scale * size), size, glyph.shadowOffset,
+                                                        glyph.boldOffset, glyph.italicOffset));
+                    }
+                    
                     run_advance += glyph.advance;
                 }
                 
@@ -1324,9 +1354,8 @@ public class TextLayout
                     final int colour = Colour.fromRgb(run.backgroundColour.getValue()).withOpacityRel(opacity).colour();
                     canvas.draw(new ICanvasState.Renderable(
                         (((vertices, matrix) -> DrawUtil.drawRect(
-                            (new Matrix4f()).mul(matrix),
+                            matrix,
                             vertices,
-                            0f,
                             line_start,
                             line_top,
                             (line_start + line_width),

@@ -26,6 +26,35 @@ dependencies {
     implementation platform.fabric.api
 }
 
+loom {
+    splitEnvironmentSourceSets()
+
+    mods {
+        "novia-test-mod" {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.client
+        }
+    }
+
+    runs {
+        client {
+            client()
+
+            displayName       = "Client"
+            generateRunConfig = true
+            preferGradleTask  = true
+            ideConfigFolder   = "Test"
+            sourceSet         = sourceSets.client.name
+
+            jvmArguments      = [
+                "-enableassertions",
+                "-Dmixin.debug.verify=true",
+                "-Dmixin.debug.countInjections=true"
+            ]
+        }
+    }
+}
+
 tasks.withType(GenerateModuleMetadata).configureEach {
     enabled = false
 }
@@ -41,10 +70,6 @@ java {
 
     sourceCompatibility = java_version
 	targetCompatibility = java_version
-}
-
-loom.runs.configureEach {
-    vmArgs("-enableassertions", "-Dmixin.debug.verify=true", "-Dmixin.debug.countInjections=true")
 }
 
 loom.log4jConfigs.from "log4j-dev.xml"
@@ -70,19 +95,13 @@ jar {
     from(rootProject.file("LICENSE.md"))
 }
 
-loom {
-    splitEnvironmentSourceSets()
-
-    mods {
-        "novia-test-mod" {
-            sourceSet sourceSets.main
-            sourceSet sourceSets.client
-        }
+sourceSets {
+    client {
+        compileClasspath += main.compileClasspath
+		runtimeClasspath += main.runtimeClasspath
+		compileClasspath += client.compileClasspath
+		runtimeClasspath += client.runtimeClasspath
     }
-
-    runConfigs.configureEach {
-		ideConfigGenerated = true
-	}
 }
 
 addFeature(project, features.core)

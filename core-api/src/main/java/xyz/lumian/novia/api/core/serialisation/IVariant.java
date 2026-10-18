@@ -132,8 +132,7 @@ sealed interface IVariant<T>
 
         @Override public String asString()
         {
-            return this.value
-                .stream()
+            return this.value.stream()
                 .map(val -> (val.isString() ? IVariant.getQuoted(val.asString()) : val.asString()))
                 .collect(Collectors.joining(",", "[", "]"));
         }
@@ -141,8 +140,7 @@ sealed interface IVariant<T>
         @Override
         public Map<Value, Value> asMap()
         {
-            return Streams
-                .mapWithIndex(this.value.stream(), (v, i) -> Pair.of(i, v))
+            return Streams.mapWithIndex(this.value.stream(), (v, i) -> Pair.of(i, v))
                 .collect(Collectors.toMap((p -> new Value(p.getFirst())), Pair::getSecond));
         }
     }
@@ -158,13 +156,13 @@ sealed interface IVariant<T>
             .xmap(StringVariant::new, StringVariant::value);
 
         //**************************************************************************************************************
-        @Override public String               getValue() { return this.value; }
-        @Override public Value.Type           getType()  { return Value.Type.STRING; }
+        @Override public String     getValue() { return this.value; }
+        @Override public Value.Type getType()  { return Value.Type.STRING; }
 
         //==============================================================================================================
         @Override public String            asString()  { return this.value; }
         @Override public boolean           asBoolean() { return this.value.equalsIgnoreCase("true"); }
-        @Override public List<Value>       asList() { return createSingletonList(new Value(this.value)); }
+        @Override public List<Value>       asList()    { return createSingletonList(new Value(this.value)); }
         @Override public Map<Value, Value> asMap()     { return createSingletonMap(new Value(this.value)); }
 
         @Override
@@ -219,7 +217,7 @@ sealed interface IVariant<T>
         //==============================================================================================================
         @Override public Number            asNumber()  { return this.value; }
         @Override public String            asString()  { return this.value.toString(); }
-        @Override public          boolean           asBoolean() { return (Math.abs(this.value.doubleValue()) > EPS); }
+        @Override public boolean           asBoolean() { return (Math.abs(this.value.doubleValue()) > EPS); }
         @Override public List<Value>       asList()    { return createSingletonList(new Value(this.value)); }
         @Override public Map<Value, Value> asMap()     { return createSingletonMap(new Value(this.value)); }
 
@@ -275,8 +273,8 @@ sealed interface IVariant<T>
         private VoidVariant() {}
         
         //==============================================================================================================
-        @Override public @Nullable Void       getValue() { return null; }
-        @Override public Value.Type getType()  { return Value.Type.VOID; }
+        @Override public @Nullable Void getValue() { return null; }
+        @Override public Value.Type     getType()  { return Value.Type.VOID; }
 
         //==============================================================================================================
         @Override public boolean           asBoolean() { return false; }

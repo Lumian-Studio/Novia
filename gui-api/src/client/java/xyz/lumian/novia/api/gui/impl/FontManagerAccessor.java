@@ -35,9 +35,12 @@
  */
 package xyz.lumian.novia.api.gui.impl;
 
-import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.font.FontSet;
-import net.minecraft.resources.Identifier;
+import net.minecraft.client.gui.GlyphSource;
+import net.minecraft.client.gui.font.glyphs.EffectGlyph;
+import net.minecraft.network.chat.FontDescription;
+import xyz.lumian.novia.api.gui.font.FontMetrics;
+
+import java.util.Optional;
 
 
 
@@ -45,7 +48,9 @@ import net.minecraft.resources.Identifier;
 public interface FontManagerAccessor
 {
     //******************************************************************************************************************
-    Font.Provider novia$getFontProvider();
-    FontSet novia$getFontSet(Identifier id);
-    FontSet novia$getMissingFontSet();
+    record FontInstance(GlyphSource source, FontMetrics metrics) {}
+    
+    //******************************************************************************************************************
+    EffectGlyph            novia$getWhiteGlyph();
+    Optional<FontInstance> novia$getFontInstance(FontDescription descriptor);
 }

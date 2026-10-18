@@ -108,9 +108,7 @@ public class DefaultGuiTemplate
         NoviaGuiEvent.DEFAULT_PALETTE_INITIALISATION.invoker().setColours(user_colours);
         
         final Set<ColourId> ids = colours.keySet();
-        colours.putAll(user_colours
-            .entrySet()
-            .stream()
+        colours.putAll(user_colours.entrySet().stream()
             .filter(e -> !ids.contains(e.getKey()))
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
         

@@ -2226,9 +2226,11 @@ public class GuiComponent
     /// @param screenY The absolute y coordinate of this component on screen
     public final void renderComponent(final Canvas canvas, final int screenX, final int screenY)
     {
-        final boolean inside_frame = canvas.frameIntersects(screenX, screenY, this.getWidth(), this.getHeight());
-        
-        if (!this.isVisible() || this.bounds.isEmpty() || !inside_frame)
+        if (
+            !this.isVisible()
+            || this.bounds.isEmpty()
+            || !canvas.frameIntersects(screenX, screenY, this.getWidth(), this.getHeight())
+        )
         {
             this.renderUpdateHierarchy(screenX, screenY, canvas.mousePos, canvas.deltaTime);
             return;

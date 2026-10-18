@@ -78,10 +78,7 @@ public class Palette
     /// Gets the colour for the given ID.
     /// @param id The [ColourId]
     /// @return The [Colour], or if not found an empty [Optional] or the default colour if one was set
-    public final Optional<Colour> getColour(final ColourId id)
-    {
-        return Optional.ofNullable(this.colours.get(id.id));
-    }
+    public final Optional<Colour> getColour(final ColourId id) { return Optional.ofNullable(this.colours.get(id.id)); }
     
     /// Gets the colour integer value for the given ID.
     /// @param id The [ColourId]

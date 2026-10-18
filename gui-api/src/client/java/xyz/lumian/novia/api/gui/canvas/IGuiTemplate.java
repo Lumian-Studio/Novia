@@ -89,7 +89,6 @@ public interface IGuiTemplate
     //******************************************************************************************************************
     /// The default template used if no explicit template was set. This template does not permit changing colours as it
     /// defines the defaults used for all components.
-    /// @throws UnsupportedOperationException If any of the colours in the map is being changed
     IGuiTemplate DEFAULT = new DefaultGuiTemplate()
     {
         @Override

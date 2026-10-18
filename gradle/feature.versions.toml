@@ -14,4 +14,4 @@ gui    = { module = 'xyz.lumian.novia.api:gui-api',     version.ref = 'gui'     
 yaml   = { module = 'xyz.lumian.novia.api:yaml-api',    version.ref = 'yaml'    }
 
 [bundles]
-novia = [ 'core', ] #'config', 'gui', 'yaml' ]
+novia = [ 'core', 'gui', 'yaml' ] #'config',  ]

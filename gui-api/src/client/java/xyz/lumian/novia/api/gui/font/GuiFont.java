@@ -239,12 +239,9 @@ public final class GuiFont
     }
     
     //******************************************************************************************************************
-    /// Finds a font from its descriptor of the font register.
-    /// @param fontDesc The descriptor of the font
-    /// @return An optional [GuiFont], or an empty optional if no font was found for that descriptor
-    public static Optional<GuiFont> findFont(final FontDescription fontDesc)
+    public static Optional<GuiFont> findFont(final FontDescription descriptor)
     {
-        return GuiFont.getGlyphSource(fontDesc).map(source -> new GuiFont(fontDesc, source));
+        return GuiFont.getFontInstance(descriptor).map(inst -> new GuiFont(descriptor, inst));
     }
     
     /// Finds a font from its ID of the font register.
@@ -252,8 +249,7 @@ public final class GuiFont
     /// @return An optional [GuiFont], or an empty optional if no font was found for that descriptor
     public static Optional<GuiFont> findFont(final Identifier fontId)
     {
-        final FontDescription desc = new FontDescription.Resource(fontId);
-        return GuiFont.getGlyphSource(new FontDescription.Resource(fontId)).map(source -> new GuiFont(desc, source));
+        return GuiFont.findFont(new FontDescription.Resource(fontId));
     }
     
     /// Gets the standard render height of text in Minecraft, this is the default size that font in Minecraft uses to
@@ -268,20 +264,24 @@ public final class GuiFont
     
     //------------------------------------------------------------------------------------------------------------------
     @SuppressWarnings("resource")
-    private static Optional<GlyphSource> getGlyphSource(final FontDescription fontId)
+    private static Optional<FontManagerAccessor.FontInstance> getFontInstance(final FontDescription descriptor)
     {
         final FontManagerAccessor manager = (FontManagerAccessor)((MinecraftClientAccessor) Minecraft.getInstance())
             .novia$getFontManager();
-        final GlyphSource   missing  = manager.novia$getMissingFontSet().source(false);
-        final Font.Provider provider = manager.novia$getFontProvider();
-        final GlyphSource source = provider.glyphs(fontId);
-        
+        return manager.novia$getFontInstance(descriptor);
+    }
+    
+    @SuppressWarnings("resource")
+    private static EffectGlyph getOrUpdateWhiteGlyph()
+    {
         if (GuiFont.WHITE_GLYPH == null)
         {
-            GuiFont.WHITE_GLYPH = manager.novia$getFontSet(Minecraft.DEFAULT_FONT).whiteGlyph();
+            final FontManagerAccessor manager = (FontManagerAccessor)((MinecraftClientAccessor) Minecraft.getInstance())
+                .novia$getFontManager();
+            GuiFont.WHITE_GLYPH = manager.novia$getWhiteGlyph();
         }
         
-        return Optional.ofNullable(source != missing ? source : null);
+        return GuiFont.WHITE_GLYPH;
     }
     
     //------------------------------------------------------------------------------------------------------------------
@@ -329,6 +329,7 @@ public final class GuiFont
     private final BitSet          formats;
     private final GlyphSource     source;
     private final FontDescription descriptor;
+    private final FontMetrics     metrics;
     
     private float fontSize = 1f;
     private float tracking = 0f;
@@ -358,28 +359,26 @@ public final class GuiFont
     
     /// Creates a new font from the given font ID with the default size and no formatting. If a font could not be found
     /// by its ID, the default font will be used.
-    /// @param fontDesc The [FontDescription] of the font
-    public GuiFont(final FontDescription fontDesc)
+    /// @param descriptor The [FontDescription] of the font
+    public GuiFont(final FontDescription descriptor)
     {
-        final Optional<GlyphSource> attempt = GuiFont.getGlyphSource(fontDesc);
-        final GlyphSource           source  = attempt.orElse(GuiFont.DEFAULT.get().source);
-        final FontDescription       desc    = (attempt.isPresent()
-            ? fontDesc
-            : new FontDescription.Resource(Minecraft.DEFAULT_FONT));
+        final Optional<FontManagerAccessor.FontInstance> instance = GuiFont.getFontInstance(descriptor);
         
-        this.formats    = new BitSet(Format.values().length);
-        this.source     = source;
-        this.descriptor = desc;
-    }
-    
-    /// Constructs a new copy of the given font object.
-    /// @param other The [GuiFont] to copy from
-    public GuiFont(final GuiFont other)
-    {
-        this(other.descriptor, other.source);
-        this.formats.or(other.formats);
-        this.fontSize = other.fontSize;
-        this.tracking = other.tracking;
+        if (instance.isPresent())
+        {
+            this.source     = instance.orElseThrow().source();
+            this.descriptor = descriptor;
+            this.metrics    = instance.orElseThrow().metrics();
+        }
+        else
+        {
+            final GuiFont defaulted = GuiFont.getCachedDefault();
+            this.source     = defaulted.source;
+            this.descriptor = defaulted.descriptor;
+            this.metrics    = defaulted.metrics;
+        }
+        
+        this.formats = new BitSet(Format.values().length);
     }
     
     /// Constructs a new font from the given [Style]. If font ID is null or couldn't be found, the default font
@@ -391,25 +390,38 @@ public final class GuiFont
         this.setStyle(style);
     }
     
+    /// Constructs a new copy of the given font object.
+    /// @param other The [GuiFont] to copy from
+    public GuiFont(final GuiFont other)
+    {
+        this.descriptor = other.descriptor;
+        this.source     = other.source;
+        this.metrics    = other.metrics;
+        this.formats    = (BitSet) other.formats.clone();
+        this.fontSize   = other.fontSize;
+        this.tracking   = other.tracking;
+    }
+    
     /// Constructs a new font with the default font, the default size and no formatting.
     public GuiFont() { this(new FontDescription.Resource(Minecraft.DEFAULT_FONT)); }
     
     //------------------------------------------------------------------------------------------------------------------
-    private GuiFont(final FontDescription descriptor, final GlyphSource source)
-    {
-        this.descriptor = descriptor;
-        this.source     = source;
-        this.formats    = new BitSet(Format.values().length);
-    }
-    
-    private GuiFont(final FontDescription fontDesc, final BitSet formats, final Either<Float, FontSize> scale,
+    // Codec constructor.
+    private GuiFont(final FontDescription descriptor, final BitSet formats, final Either<Float, FontSize> fontSize,
                     final float tracking)
     {
-        this(fontDesc);
-        
+        this(descriptor);
         this.formats.or(formats);
-        this.fontSize = scale.map(Function.identity(), FontSize::getEmScale);
+        this.fontSize = fontSize.map(Function.identity(), FontSize::getEmScale);
         this.tracking = tracking;
+    }
+    
+    private GuiFont(final FontDescription descriptor, final FontManagerAccessor.FontInstance instance)
+    {
+        this.source     = instance.source();
+        this.descriptor = descriptor;
+        this.metrics    = instance.metrics();
+        this.formats    = new BitSet(Format.values().length);
     }
     
     //==================================================================================================================
@@ -445,9 +457,10 @@ public final class GuiFont
         return this.source.getRandomGlyph(random, width);
     }
     
-    /// Gets the baked rectangle glyph used to draw the lines for things like underlined or strike-through texts.
+    /// Gets the white rectangle glyph vanilla uses to draw the lines for things like underlined or strike-through
+    /// texts.
     /// @return The rectangle [BakedGlyph]
-    public EffectGlyph getWhiteGlyph() { return Objects.requireNonNull(GuiFont.WHITE_GLYPH); }
+    public EffectGlyph getWhiteGlyph() { return GuiFont.getOrUpdateWhiteGlyph(); }
     
     /// Gets the current size for this font relative to [#getDefaultRenderHeight()].
     /// @param unit The unit to convert the size to
@@ -474,8 +487,7 @@ public final class GuiFont
     /// @return The scaled height of the font
     public float getHeight()
     {
-        final FontMetrics metrics = ((FontSetAccessor) this.source).novia$getMetrics();
-        return (metrics.height() * this.fontSize + this.fontSize);
+        return (this.metrics.height() * this.fontSize + this.fontSize);
     }
     
     /// Gets the scaled ascent of the font, this is the distance between the top of the font down to the baseline.
@@ -483,8 +495,7 @@ public final class GuiFont
     /// @return The scaled ascent of the font
     public float getAscent()
     {
-        final FontMetrics metrics = ((FontSetAccessor) this.source).novia$getMetrics();
-        return (metrics.ascent() * this.fontSize);
+        return (this.metrics.ascent() * this.fontSize);
     }
     
     /// Gets the scaled descent of the font, this is the distance between the bottom of the font up to the baseline.
@@ -492,8 +503,7 @@ public final class GuiFont
     /// @return The scaled descent of the font
     public float getDescent()
     {
-        final FontMetrics metrics = ((FontSetAccessor) this.source).novia$getMetrics();
-        return (metrics.descent() * this.fontSize + this.fontSize);
+        return (this.metrics.descent() * this.fontSize + this.fontSize);
     }
     
     /// Gets the width of the code point with the current font (ignoring tracking).

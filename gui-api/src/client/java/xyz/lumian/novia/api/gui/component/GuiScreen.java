@@ -44,6 +44,7 @@ import xyz.lumian.novia.api.gui.canvas.Canvas;
 import net.minecraft.client.gui.screens.Screen;
 
 
+
 //**********************************************************************************************************************
 /// The base class to be used for creating new Minecraft screens.
 /// Novia screen classes are not compatible with Minecraft screen and widget classes, however, Novia comes with a handful
@@ -98,7 +99,8 @@ public class GuiScreen
     ///
     /// This should not be used for anything other than API compatibility with Minecraft or other mods,
     /// anything screen and GUI-wise should be done through the [GuiScreen] class and its components.
-    /// @return The Minecraft screen layer
+    ///
+    /// @return The Minecraft [Screen] layer
     public final Screen getMcScreen() { return this.interop; }
     
     /// Gets the music sound, which should be played while this screen is open.
@@ -115,7 +117,6 @@ public class GuiScreen
     
     //------------------------------------------------------------------------------------------------------------------
     /// Disallowing modal promotion for screens because of potential issues with the way screens work.
-    /// @return [false]
     @Override public final boolean isModalPromotionAllowed() { return false; }
     
     //==================================================================================================================

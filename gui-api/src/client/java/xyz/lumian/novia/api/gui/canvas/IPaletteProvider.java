@@ -57,10 +57,7 @@ public interface IPaletteProvider
     /// @param id The [ColourId]
     /// @return The [Colour] or an empty [Optional].
     @Contract(pure = true)
-    default Optional<Colour> getColour(final ColourId id)
-    {
-        return this.getPalette().getColour(id);
-    }
+    default Optional<Colour> getColour(final ColourId id) { return this.getPalette().getColour(id); }
     
     /// Sets or unsets the given colour for the palette.
     /// @param id     The [ColourId]
