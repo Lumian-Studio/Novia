@@ -5,7 +5,7 @@ java      = '25'
 
 # Plugins
 buildconfig = '6.0.6'
-loom        = '1.18-SNAPSHOT'
+loom        = '1.15-SNAPSHOT'
 
 [plugins]
 buildconfig = { id = 'com.github.gmazzo.buildconfig', version.ref = 'buildconfig' }

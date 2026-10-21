@@ -45,6 +45,7 @@ import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.datafixers.util.Function3;
 import net.minecraft.client.ComponentCollector;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.font.glyphs.BakedGlyph;
 import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.client.renderer.texture.AbstractTexture;
@@ -696,16 +697,19 @@ public class TextLayout
     
     //==================================================================================================================
     private record DrawableGlyph(
-                  BakedSheetGlyphAccessor baked,
-                  VertexPalette           textPalette,
-        @Nullable VertexPalette           shadowPalette,
-                  float                   x,
-                  float                   y,
-                  float                   scale,
-                  float                   size,
-                  float                   shadowOffset,
-                  float                   boldOffset,
-                  float                   italicOffset
+        BakedSheetGlyphAccessor baked,
+        VertexPalette           textPalette,
+        
+        @Nullable
+        VertexPalette shadowPalette,
+        
+        float x,
+        float y,
+        float scale,
+        float size,
+        float shadowOffset,
+        float boldOffset,
+        float italicOffset
     )
     {
         //**************************************************************************************************************
@@ -798,14 +802,17 @@ public class TextLayout
     }
     
     private record LineRenderer(
-                  float         x,
-                  float         y,
-                  float         width,
-                  float         height,
-                  float         shadowOffset,
-                  VertexPalette colourPalette,
-        @Nullable VertexPalette shadowPalette,
-                  int           light
+        float         x,
+        float         y,
+        float         width,
+        float         height,
+        float         shadowOffset,
+        VertexPalette colourPalette,
+        
+        @Nullable
+        VertexPalette shadowPalette,
+        
+        int light
     )
         implements ICanvasState.Renderer
     {
@@ -1261,7 +1268,7 @@ public class TextLayout
                         {
                             states.addLast(new ICanvasState.Renderable(
                                 new GlyphRenderer(new ArrayList<>(drawables)),
-                                texturise.apply(texture, brush.getTexture()), pipeline2,
+                                texturise.apply(texture, brush.getTexture()), pipeline,
                                 new Rectangle(Mth.floor(line_left),  Mth.floor(run_top),
                                               Mth.ceil(run_advance), Mth.ceil(run_height))));
                         }
@@ -1325,16 +1332,15 @@ public class TextLayout
                 
                 if (!drawables.isEmpty() && run_advance > 0f)
                 {
-                    states.addLast(new ICanvasState.Renderable(
-                        new GlyphRenderer(
-                            new ArrayList<>(drawables)),
-                            texturise.apply(texture, brush.getTexture()),
-                            pipeline,
-                            new Rectangle(
-                                Mth.floor(line_left),
-                                Mth.floor(run_top),
-                                Mth.ceil(run_advance),
-                                Mth.ceil(run_height))));
+                    states.addLast(new ICanvasState.Renderable(new GlyphRenderer(
+                        new ArrayList<>(drawables)),
+                        texturise.apply(texture, brush.getTexture()),
+                        pipeline,
+                        new Rectangle(
+                            Mth.floor(line_left),
+                            Mth.floor(run_top),
+                            Mth.ceil(run_advance),
+                            Mth.ceil(run_height))));
                 }
                 
                 drawables.clear();
@@ -1346,21 +1352,13 @@ public class TextLayout
                 
                 if (run.backgroundColour != null && run_advance > 0f)
                 {
-                    final Rectangle bg_bounds = new Rectangle(
-                        Mth.floor(line_start),
-                        Mth.floor(line_top),
-                        Mth.ceil(line_width),
-                        Mth.ceil(line_height));
+                    final Rectangle bg_bounds = new Rectangle(Mth.floor(line_start), Mth.floor(line_top),
+                                                              Mth.ceil(line_width),  Mth.ceil(line_height));
                     final int colour = Colour.fromRgb(run.backgroundColour.getValue()).withOpacityRel(opacity).colour();
                     canvas.draw(new ICanvasState.Renderable(
-                        (((vertices, matrix) -> DrawUtil.drawRect(
-                            matrix,
-                            vertices,
-                            line_start,
-                            line_top,
-                            (line_start + line_width),
-                            (line_top + line_height),
-                            colour, colour, colour, colour))),
+                        (((vertices, matrix) -> DrawUtil.drawRect(matrix, vertices, line_start, line_top,
+                                                                  (line_start + line_width), (line_top + line_height),
+                                                                  colour, colour, colour, colour))),
                         null,
                         null,
                         bg_bounds));

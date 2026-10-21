@@ -144,7 +144,7 @@ public class NVScrollbar
     public static final boolean DEFAULT_IS_VERTICAL = true;
     
     /// See [NVScrollbar#minThumbSize].
-    public static final int DEFAULT_MIN_THUMB_SIZE = 32;
+    public static final int DEFAULT_MIN_THUMB_SIZE = 16;
     
     //==================================================================================================================
     /// The texture used for the scroll bar thumb.

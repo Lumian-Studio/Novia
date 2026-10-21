@@ -1,8 +1,7 @@
 {
     "required": true,
-    "minVersion": "0.8",
-    "package": "xyz.lumialights.novia.api.config.mixin.server",
-    "compatibilityLevel": "JAVA_21",
+    "package": "xyz.lumian.novia.api.config.mixin.server",
+    "compatibilityLevel": "JAVA_25",
     "server": [
         "RegistryBootstrapMixin"
     ],

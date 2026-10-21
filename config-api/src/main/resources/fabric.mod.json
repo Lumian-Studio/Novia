@@ -2,7 +2,7 @@
     "schemaVersion": 1,
     "id": "novia-config-api",
     "version": "${version}",
-    "name": "${mod_name}",
+    "name": "${name}",
     "description": "A Novia module for building elaborate configuration systems.",
     "authors": [ "LumiaLights" ],
     "icon": "assets/novia-config-api/icon.png",
@@ -14,10 +14,18 @@
     "license": "MIT",
     "environment": "*",
     "entrypoints": {
-        "client": ["xyz.lumialights.novia.api.config.client.ConfigApiClient"],
-        "main": ["xyz.lumialights.novia.api.config.ConfigApi"],
-        "modmenu": ["xyz.lumialights.novia.api.config.client.gui.ConfigMenuProvider"],
-        "fabric-datagen": ["xyz.lumialights.novia.api.config.data.ConfigApiDataProvider"]
+        "client": [
+            "xyz.lumian.novia.api.config.client.ConfigApiClient"
+        ],
+        "main": [
+            "xyz.lumian.novia.api.config.ConfigApi"
+        ],
+        "modmenu": [
+            "xyz.lumian.novia.api.config.client.gui.ConfigMenuProvider"
+        ],
+        "fabric-datagen": [
+            "xyz.lumian.novia.api.config.data.ConfigApiDataProvider"
+        ]
     },
     "mixins": [
         {
@@ -30,9 +38,9 @@
         }
     ],
     "depends": {
-        "fabricloader": ">=${loader_version}",
+        "fabricloader": "${fabric_loader_version}",
         "java": "${java_version}",
-        "minecraft": ">=${minecraft_version}",
+        "minecraft": "${minecraft_version}",
         "novia-core-api": "*"
     }
 }

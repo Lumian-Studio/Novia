@@ -50,9 +50,8 @@ public class TestMod
     static
     {
         /*TEST_CONFIG = ConfigManager.REGISTRY.register(
-            Identifier.of("novia-test-mod:widget-test-config"),
-            ConfigProvider
-                .builder(WidgetTestConfig.SPEC)
+            Identifier.parse("novia-test-mod:widget-test-config"),
+            ConfigProvider.builder(WidgetTestConfig.SPEC)
                 .setBackend(YamlOps.INSTANCE));*/
     }
     

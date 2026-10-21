@@ -265,7 +265,7 @@ public record Colour(int colour)
             Integer.parseUnsignedInt(m.group(1), 16)
                 | (m.group(2) != null
                    ? (Integer.parseUnsignedInt(m.group(2), 16) << 24)
-                   : 0xff000000));
+                   : 0xFF000000));
         return new Colour(colour);
     }
     
@@ -455,7 +455,7 @@ public record Colour(int colour)
         {
             return this;
         }
-
+        
         final float alpha = ARGB.alphaFloat(this.colour);
         return new Colour(ARGB.color(ARGB.as8BitChannel(opacity * alpha), this.colour));
     }

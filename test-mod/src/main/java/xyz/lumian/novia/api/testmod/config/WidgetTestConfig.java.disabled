@@ -33,14 +33,15 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
  */
-package xyz.lumialights.novia.test.mod.config;
+package xyz.lumian.novia.api.testmod.config;
 
-import net.minecraft.util.Identifier;
-import xyz.lumialights.novia.api.config.property.Property;
-import xyz.lumialights.novia.api.config.schema.factory.SchemaFactory;
-import xyz.lumialights.novia.api.config.spec.ConfigSpec;
-import xyz.lumialights.novia.api.config.spec.builder.ConfigSpecBuilder;
-import xyz.lumialights.novia.api.core.serialisation.Value;
+import com.mojang.serialization.Codec;
+import net.minecraft.resources.Identifier;
+import xyz.lumian.novia.api.config.property.Property;
+import xyz.lumian.novia.api.config.schema.builtin.ConstantSchema;
+import xyz.lumian.novia.api.config.spec.ConfigSpec;
+import xyz.lumian.novia.api.config.spec.builder.ConfigSpecBuilder;
+import xyz.lumian.novia.api.core.serialisation.Value;
 
 import java.util.*;
 
@@ -48,57 +49,58 @@ import java.util.*;
 
 //**********************************************************************************************************************
 public record WidgetTestConfig(
-    Property string,
-    Property number,
-    Property bool,
-    Property bool2,
-    Property bool3,
-    Property nil,
-    Property list,
-    Property map,
+    Property<String>              string,
+    Property<Number>              number,
+    Property<Boolean>             bool,
+    Property<Boolean>             bool2,
+    Property<Boolean>             bool3,
+    Property<Optional<Boolean>>   optional,
+    Property<List<Value>>         list,
+    Property<Map<String, String>> map,
     
-    Property intRange,
-    Property constant
+    Property<Value> constant
 )
 {
     //******************************************************************************************************************
+    public static final Value DEFAULT_CONSTANT = new Value(Map.of(
+        new Value("hello_prop"), new Value("some_property"),
+        new Value("and_another"), new Value(List.of(
+            new Value("with_strings_and"),
+            new Value(420),
+            Value.TRUE
+        ))
+    ));
+    
     public static final ConfigSpec<WidgetTestConfig> SPEC
-        = (new ConfigSpecBuilder<>(Identifier.of("novia-test-mod:widget-test-config"), WidgetTestConfig.class))
+        = (new ConfigSpecBuilder<>(Identifier.parse("novia-test-mod:widget-test-config"), WidgetTestConfig.class))
             .withGroup("primitives", bg -> bg
                 .withProperty("string",   WidgetTestConfig::string)
                 .withProperty("number",   WidgetTestConfig::number)
                 .withProperty("bool",     WidgetTestConfig::bool)
                 .withProperty("bool2",    WidgetTestConfig::bool2)
                 .withProperty("bool3",    WidgetTestConfig::bool3)
-                .withProperty("nil",      WidgetTestConfig::nil)
+                .withProperty("optional", WidgetTestConfig::optional)
                 .withProperty("list",     WidgetTestConfig::list)
                 .withProperty("map",      WidgetTestConfig::map))
-            .withGroup("advanced", bg -> bg
-                .withProperty("intRange", WidgetTestConfig::intRange, bp -> bp
-                    .withSchema(SchemaFactory.rangeSchema(32, 99)))
-                .withProperty("constant", WidgetTestConfig::constant))
+            .withGroup("complex", bg -> bg
+                .withProperty("constant", WidgetTestConfig::constant, (p -> p
+                    .withSchema(new ConstantSchema<>(WidgetTestConfig.DEFAULT_CONSTANT)))))
             .build(WidgetTestConfig::new);
     
     //******************************************************************************************************************
     public WidgetTestConfig()
     {
         this(
-            Property.create("Hello world!"),
-            Property.create(400),
-            Property.create(true),
-            Property.create(false),
-            Property.create(true),
-            Property.create(),
-            Property.create(List.of()),
-            Property.create(Map.of()),
+            Property.string("Hello world!"),
+            Property.number(400),
+            Property.bool(true),
+            Property.bool(false),
+            Property.bool(true),
+            Property.optional(Optional.empty(), Codec.BOOL),
+            Property.list(List.of(), Value.CODEC),
+            Property.map(Map.of(), Codec.STRING, Codec.STRING),
             
-            Property.create(42),
-            Property.create(Map.of(
-                new Value("hello_prop"), new Value("some_property"),
-                new Value("and_another"), new Value(List.of(
-                    new Value("with_strings_and"),
-                    new Value(420),
-                    Value.TRUE))
-            )));
+            Property.var(WidgetTestConfig.DEFAULT_CONSTANT)
+        );
     }
 }

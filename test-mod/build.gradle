@@ -26,35 +26,6 @@ dependencies {
     implementation platform.fabric.api
 }
 
-loom {
-    splitEnvironmentSourceSets()
-
-    mods {
-        "novia-test-mod" {
-            sourceSet sourceSets.main
-            sourceSet sourceSets.client
-        }
-    }
-
-    runs {
-        client {
-            client()
-
-            displayName       = "Client"
-            generateRunConfig = true
-            preferGradleTask  = true
-            ideConfigFolder   = "Test"
-            sourceSet         = sourceSets.client.name
-
-            jvmArguments      = [
-                "-enableassertions",
-                "-Dmixin.debug.verify=true",
-                "-Dmixin.debug.countInjections=true"
-            ]
-        }
-    }
-}
-
 tasks.withType(GenerateModuleMetadata).configureEach {
     enabled = false
 }
@@ -65,11 +36,40 @@ tasks.withType(JavaCompile).configureEach {
 	it.options.release = java_version
 }
 
+loom.runs.configureEach {
+    vmArgs(
+        "-enableassertions",
+        "-Dmixin.debug.verify=true",
+        "-Dmixin.debug.countInjections=true",
+        "-Dmixin.checks.interfaces=true",
+		"-Dfabric.resource_loader.debug.reloaders_identity.strict=true",
+		"-XX:+UseZGC",
+		"-XX:+UseCompactObjectHeaders",
+		"-XX:+AlwaysPreTouch",
+		"-XX:+UseStringDeduplication"
+    )
+}
+
 java {
 	withSourcesJar()
 
     sourceCompatibility = java_version
 	targetCompatibility = java_version
+}
+
+loom {
+    splitEnvironmentSourceSets()
+
+    mods {
+        "novia-test-mod" {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.client
+        }
+    }
+
+    runConfigs.configureEach {
+        ideConfigGenerated = true
+    }
 }
 
 loom.log4jConfigs.from "log4j-dev.xml"
@@ -95,16 +95,7 @@ jar {
     from(rootProject.file("LICENSE.md"))
 }
 
-sourceSets {
-    client {
-        compileClasspath += main.compileClasspath
-		runtimeClasspath += main.runtimeClasspath
-		compileClasspath += client.compileClasspath
-		runtimeClasspath += client.runtimeClasspath
-    }
-}
-
-addFeature(project, features.core)
-addFeature(project, features.gui)
-addFeature(project, features.yaml)
-//addFeature(project, features.config)
+addFeature project, features.core
+addFeature project, features.gui
+addFeature project, features.yaml
+//addFeature project, features.config

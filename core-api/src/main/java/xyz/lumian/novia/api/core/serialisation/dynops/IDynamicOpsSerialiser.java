@@ -51,6 +51,8 @@ public interface IDynamicOpsSerialiser<T>
 {
     //******************************************************************************************************************
     /// Determines all valid file extensions that this serialiser accepts.
+    /// The file extensions should be ordered by conventional occurrence
+    /// (e.g. "yaml" first as it is more conventional than "yml").
     /// @return An array of all valid file extensions
     String[] getFileExtensions();
     

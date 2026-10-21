@@ -43,6 +43,9 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.PrimitiveCodec;
 import xyz.lumian.novia.api.core.util.NumberType;
 
+import java.util.Arrays;
+import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -136,5 +139,24 @@ public abstract class NoviaCodecs
                 return DataResult.success(ops.empty());
             }
         };
+    }
+    
+    /// Creates an enumeration codec for the given enum class.
+    /// @param enumClass  The class of the enum
+    /// @param ignoreCase Whether the string representation of an enum constant does not care about case sensitivity
+    /// @return The enum codec
+    public static <E extends Enum<E>> Codec<E> namedEnum(final Class<E> enumClass, final boolean ignoreCase)
+    {
+        final BiPredicate<E, String> compare_func = (ignoreCase
+            ? ((e, s) -> e.name().equalsIgnoreCase(s))
+            : ((e, s) -> e.name().equals(s)));
+        return Codec.STRING.comapFlatMap(
+            (str -> Arrays.stream(enumClass.getEnumConstants())
+                .filter(e -> compare_func.test(e, str))
+                .findFirst()
+                .map(DataResult::success)
+                .orElseGet(() -> DataResult.error(() -> "Enum constant '%s' does not exist in enum %s".formatted(
+                    str, enumClass.getSimpleName())))),
+            E::name);
     }
 }

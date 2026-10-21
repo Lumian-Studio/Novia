@@ -159,7 +159,7 @@ public class NVSimpleButton
     private Identifier textureId = null;
     
     @Nullable
-    private Component text = null;
+    private Component text;
     
     //******************************************************************************************************************
     /// Constructs a new button with the given text and action.
