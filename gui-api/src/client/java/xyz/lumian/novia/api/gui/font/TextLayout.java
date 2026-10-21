@@ -1192,8 +1192,16 @@ public class TextLayout
         final GpuSampler sampler = RenderSystem.getSamplerCache().getRepeat(FilterMode.NEAREST);
         final BiFunction<@Nullable GpuTextureView, @Nullable AbstractTexture, TextureSetup> texturise = ((tex1, tex2) ->
             new TextureSetup(
-                tex1,                            (tex2 != null ? tex2.getTextureView() : null), null,
-                (tex1 != null ? sampler : null), (tex2 != null ? tex2.getSampler()     : null), null));
+                
+                tex1,
+                (tex2 != null ? tex2.getTextureView() : null),
+                Minecraft.getInstance().gameRenderer.lightmap(),
+                
+                (tex1 != null ? sampler           : null),
+                (tex2 != null ? tex2.getSampler() : null),
+                RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR)
+        
+        ));
         
         for (final var line : this.lines)
         {
